@@ -17,7 +17,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -135,7 +134,6 @@ public class GameActivity extends AppCompatActivity {
 
     private void setupWave(int currentWave) {
         isWaveEnded = false;
-        // Restaurado conforme GAME_DESIGN.md
         switch (currentWave) {
             case 1: totalDucksInWave = 10; timeLeft = 30; meta = 7; break;
             case 2: totalDucksInWave = 12; timeLeft = 30; meta = 9; break;
@@ -172,24 +170,32 @@ public class GameActivity extends AppCompatActivity {
         startTimer();
     }
 
-    private void startTimer() {
-        gameHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (timeLeft > 0 && isWaveActive) {
-                    if (!isTimeFrozen && !isPaused) {
-                        timeLeft--;
-                        updateHUD();
-                    }
-                    gameHandler.postDelayed(this, 1000);
-                } else if (timeLeft == 0 && !isWaveEnded && !isPaused) {
-                    endWave();
+    private final Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!isWaveActive || isPaused) return; // Fix: Stop rescheduling if paused
+
+            if (timeLeft > 0) {
+                if (!isTimeFrozen) {
+                    timeLeft--;
+                    updateHUD();
                 }
+                gameHandler.postDelayed(this, 1000);
+            } else if (!isWaveEnded) {
+                endWave(); // Fix: Removed !isPaused check
             }
-        }, 1000);
+        }
+    };
+
+    private void startTimer() {
+        gameHandler.removeCallbacks(timerRunnable);
+        gameHandler.postDelayed(timerRunnable, 1000);
     }
 
     private void spawnNextDuck() {
+        // Fix: Added gameHandler.removeCallbacks to ensure we don't have multiple spawn loops
+        gameHandler.removeCallbacks(this::spawnNextDuck);
+
         if (!isWaveActive || isPaused || ducksSpawned >= totalDucksInWave) return;
 
         Pato.Tipo tipo = sortearTipoPato(wave);
@@ -289,11 +295,9 @@ public class GameActivity extends AppCompatActivity {
         animator.start();
     }
 
-    // CORREÇÃO NPE E CONCURRENT MODIFICATION
     private void handleDuckClick(Pato pato) {
         if (!pato.isAtivo() || isWaveEnded || isPaused) return;
         
-        // Salvar coords ANTES de qualquer dano que possa remover a View
         float clickX = 0, clickY = 0;
         if (pato.getView() != null) {
             clickX = pato.getView().getTranslationX() + pato.getView().getWidth() / 2f;
@@ -307,7 +311,6 @@ public class GameActivity extends AppCompatActivity {
             float raioPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 
                     estadoJogador.getRaioShotgunDp(), getResources().getDisplayMetrics());
             
-            // Iterar sobre uma CÓPIA da lista para evitar ConcurrentModificationException
             List<Pato> copiaPatos = new ArrayList<>(patosAtivos);
             for (Pato p : copiaPatos) {
                 if (p == pato || !p.isAtivo() || p.getView() == null) continue;
@@ -340,7 +343,7 @@ public class GameActivity extends AppCompatActivity {
     private void removeDuck(Pato pato) {
         pato.setAtivo(false);
         if (pato.getAnimator() != null) {
-            pato.getAnimator().removeAllListeners(); // Evita callbacks recursivos
+            pato.getAnimator().removeAllListeners();
             pato.getAnimator().cancel();
         }
         patosAtivos.remove(pato);
@@ -350,7 +353,6 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    // Habilidades Ativas
     private void acionarBomba() {
         if (isPaused) return;
         long now = System.currentTimeMillis();
@@ -358,7 +360,6 @@ public class GameActivity extends AppCompatActivity {
         if (now - lastBombaTime < cd) return;
         lastBombaTime = now;
         
-        // Iteração segura
         for (Pato p : new ArrayList<>(patosAtivos)) aplicarDanoAoPato(p, 999);
     }
 
@@ -375,7 +376,7 @@ public class GameActivity extends AppCompatActivity {
             p.setBlinkPaused(true);
         }
         gameHandler.postDelayed(() -> {
-            if (!isPaused) { // Só retoma se não estiver pausado globalmente
+            if (!isPaused) {
                 isTimeFrozen = false;
                 for (Pato p : patosAtivos) {
                     if (p.getAnimator() != null) p.getAnimator().resume();
@@ -394,11 +395,11 @@ public class GameActivity extends AppCompatActivity {
         
         isHeadwindActive = true;
         float red = 1.0f - estadoJogador.getPercentualVentoBase() / 100f;
-        // Iteração segura
         for (Pato p : new ArrayList<>(patosAtivos)) {
             p.setVelocidade(p.getVelocidade() * red);
             if (p.getAnimator() != null && p.getView() != null) {
                 float curX = p.getView().getTranslationX();
+                p.getAnimator().removeAllListeners(); // Fix: Stop animator from removing duck on cancel
                 p.getAnimator().cancel();
                 animateDuckFrom(p, curX);
             }
@@ -453,12 +454,10 @@ public class GameActivity extends AppCompatActivity {
         overlay.requestLayout();
     }
 
-    // SISTEMA DE PAUSE GLOBAL
     private void showPauseMenu() {
         if (isPaused || isWaveEnded) return;
         isPaused = true;
         
-        // Pausar tudo
         for (Pato p : patosAtivos) {
             if (p.getAnimator() != null) p.getAnimator().pause();
             p.setBlinkPaused(true);
@@ -474,6 +473,8 @@ public class GameActivity extends AppCompatActivity {
                         if (p.getAnimator() != null && !isTimeFrozen) p.getAnimator().resume();
                         if (!isTimeFrozen) p.setBlinkPaused(false);
                     }
+                    startTimer(); // Fix: Restart timer tick
+                    spawnNextDuck(); // Fix: Restart spawn loop
                     break;
                 case 1: // Reiniciar
                     restartRun();
@@ -506,10 +507,12 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void sairJogo() {
+        isPaused = false;
+        isWaveActive = false;
         gameHandler.removeCallbacksAndMessages(null);
         cooldownHandler.removeCallbacksAndMessages(null);
         for (Pato p : new ArrayList<>(patosAtivos)) {
-            if (p.getAnimator() != null) p.getAnimator().cancel();
+            removeDuck(p);
         }
         finish();
     }
