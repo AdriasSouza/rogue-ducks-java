@@ -328,16 +328,72 @@ public class GameActivity extends AppCompatActivity {
 
     private void aplicarDanoAoPato(Pato pato, int dano) {
         if (!pato.isAtivo()) return;
+        
         pato.sofrerDano(dano);
+
+        // Feedback Visual de Hit (Não-bloqueante)
+        ImageView view = pato.getView();
+        if (view != null) {
+            ObjectAnimator pulseX = ObjectAnimator.ofFloat(view, "scaleX", 1.0f, 1.2f, 1.0f);
+            ObjectAnimator pulseY = ObjectAnimator.ofFloat(view, "scaleY", 1.0f, 1.2f, 1.0f);
+            pulseX.setDuration(100);
+            pulseY.setDuration(100);
+            pulseX.start();
+            pulseY.start();
+        }
+
         if (pato.getVidaAtual() <= 0) {
+            // Lógica de jogo imediata (Pontuação e Meta)
             score += pato.getTipo().pontos;
             ducksKilled++;
             updateHUD();
-            removeDuck(pato);
+            
+            // Animação de Morte (Paralela à remoção)
+            executarAnimacaoMorte(pato);
         } else {
             float alpha = (float) pato.getVidaAtual() / pato.getVidaMaxima();
-            if (pato.getView() != null) pato.getView().setAlpha(Math.max(0.2f, alpha));
+            if (view != null) view.setAlpha(Math.max(0.2f, alpha));
         }
+    }
+
+    private void executarAnimacaoMorte(Pato pato) {
+        pato.setAtivo(false); // Impede novos cliques
+        ImageView view = pato.getView();
+        if (view == null) {
+            removeDuck(pato); // Segurança
+            return;
+        }
+
+        // Remover do controle de jogo imediatamente
+        if (pato.getAnimator() != null) {
+            pato.getAnimator().removeAllListeners();
+            pato.getAnimator().cancel();
+        }
+        patosAtivos.remove(pato);
+
+        // Animação visual de saída "shrink and fade"
+        ObjectAnimator sX = ObjectAnimator.ofFloat(view, "scaleX", view.getScaleX(), 0f);
+        ObjectAnimator sY = ObjectAnimator.ofFloat(view, "scaleY", view.getScaleY(), 0f);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(view, "alpha", view.getAlpha(), 0f);
+        
+        sX.setDuration(200);
+        sY.setDuration(200);
+        alpha.setDuration(200);
+
+        alpha.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                // Remoção física da View apenas após o efeito visual
+                if (view.getParent() != null) {
+                    ((RelativeLayout) view.getParent()).removeView(view);
+                }
+                pato.setView(null);
+            }
+        });
+
+        sX.start();
+        sY.start();
+        alpha.start();
     }
 
     private void removeDuck(Pato pato) {

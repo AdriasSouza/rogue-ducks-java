@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/gameContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#87CEEB"> <!-- Sky Blue -->
+    android:background="@color/bg_dark">
 
     <!-- HUD Area -->
     <LinearLayout
@@ -12,7 +13,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:background="#80000000">
+        android:background="#A0000000">
 
         <TextView
             android:id="@+id/txtScore"
@@ -20,9 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Pontos: 0"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            style="@style/RogueDucks.Text.HUD" />
 
         <TextView
             android:id="@+id/txtWave"
@@ -30,9 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Onda: 1"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            style="@style/RogueDucks.Text.HUD"
             android:gravity="center" />
 
         <TextView
@@ -41,9 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Tempo: 30s"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            style="@style/RogueDucks.Text.HUD"
             android:gravity="end" />
     </LinearLayout>
 
@@ -55,8 +50,9 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="8dp"
         android:text="Meta: 0/7"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp" />
+        android:textColor="@color/text_muted"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <!-- Botão de Pause -->
     <ImageButton
@@ -69,6 +65,7 @@
         android:layout_marginEnd="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_media_pause"
+        app:tint="@color/primary_gold"
         android:contentDescription="Pausar Jogo" />
 
     <!-- Abilities Container -->
@@ -98,8 +95,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textColor="@color/secondary_red"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
@@ -121,8 +118,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textColor="@color/secondary_red"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
@@ -144,11 +141,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textColor="@color/secondary_red"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
     </LinearLayout>
-
 </RelativeLayout>

@@ -27,3 +27,4 @@
     - [x] Ajustes de balanceamento e tetos de stacking.
     - [x] Correção de bugs críticos (ConcurrentModification, NPE).
     - [x] Sistema de Pause Global e Menu de Opções.
+    - [x] Correção de bugs de regressão (Vento Contrário, Travamento de Onda, Spawn Pós-Pause).

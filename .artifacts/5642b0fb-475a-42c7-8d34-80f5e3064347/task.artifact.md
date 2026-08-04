@@ -1,18 +1,14 @@
-- [ ] **Correções de Estabilidade (Crashes)**
-    - [ ] Corrigir NPE no `handleDuckClick` (salvar coords antes do dano).
-    - [ ] Garantir iteração sobre cópia (`new ArrayList<>(patosAtivos)`) no Shotgun, Bomba e Vento.
-- [ ] **Correção de Regressão**
-    - [ ] Restaurar meta e tempo de onda originais no `setupWave`.
-- [ ] **Melhorias de HUD e Feedback**
-    - [ ] Adicionar labels numéricos de cooldown no `activity_game.xml`.
-    - [ ] Atualizar timer numérico no `cooldownHandler`.
-- [ ] **Sistema de Pause Global**
-    - [ ] Adicionar botão de Pause no layout.
-    - [ ] Implementar lógica de pause global (Animators, Handlers, Spawns).
-    - [ ] Criar Menu de Pause (`AlertDialog`) com Continuar, Reiniciar, Sair.
-    - [ ] Sobrescrever `onBackPressed` para abrir o Pause.
-- [ ] **Verificação em Dispositivo Físico**
-    - [ ] Validar Shotgun em grupos (estresse de mortes simultâneas).
-    - [ ] Validar Reinício de Run (limpeza total de Views e Handlers).
-    - [ ] Validar Meta de Onda 1 (Meta: 7, Tempo: 30s).
-    - [ ] Atualizar `PROGRESS.md`.
+- [ ] **Paleta de Cores e Estilos**
+    - [ ] Atualizar `colors.xml` com a nova paleta Dark/Roguelike.
+    - [ ] Criar `styles.xml` com estilos reutilizáveis para botões e HUD.
+    - [ ] Criar drawables para botões (ripple) e cards (rounded).
+- [ ] **Feedback de Interação (Game)**
+    - [ ] Implementar animação de flash (hit) no `GameActivity`.
+    - [ ] Implementar animação de morte (shrink) paralela à lógica de jogo.
+- [ ] **Polimento de Telas**
+    - [ ] Aplicar estilos e cores na `MainActivity`.
+    - [ ] Aplicar estilos e cores na `RankingActivity`.
+    - [ ] Refinar `CartaActivity` com cards coloridos por categoria.
+- [ ] **Verificação e Git**
+    - [ ] Validar build e fluxos de animação.
+    - [ ] Fazer commit: "polish visual - cores, estilos e feedback de interação".

@@ -1,66 +1,66 @@
-# Plano de Correção e Refinamento - Debug Playtest
+# Plano de Implementação - Polimento Visual e UX
 
-Este plano foca na resolução de crashes críticos (NPE e ConcurrentModification), correção da meta de onda e implementação do sistema de Pause global.
+Este plano foca na padronização estética do projeto e na melhoria da experiência do usuário (UX) através de estilos consistentes e feedbacks visuais de interação.
 
 ## User Review Required
 
-> [!IMPORTANT]
-> **Shotgun NPE**: O crash ocorria porque a `View` do pato era removida (e setada como null) ao morrer pelo clique direto *antes* do cálculo da explosão.
-> **Vento Contrário**: Iterar sobre a lista original enquanto remove/cancela animators causava instabilidade.
-> **Pause Global**: Implementaremos uma interrupção total que afeta Timers, Spawns, Animators e Handlers.
+> [!NOTE]
+> Utilizaremos uma paleta de cores inspirada em temas "Dark/Retro" para combinar com a temática Roguelike.
+> As animações de feedback de acerto serão leves para não comprometer a performance em dispositivos reais.
 
 ## Proposed Changes
 
-### 1. Correções de Estabilidade (Crashes)
+### 1. Identidade Visual e Estilos
+
+#### [MODIFY] [colors.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/values/colors.xml)
+- Definir paleta global:
+    - `bg_dark`: #1A1A1D (Fundo principal)
+    - `primary_gold`: #F1C40F (Destaque e Pato Dourado)
+    - `secondary_red`: #E74C3C (Ações críticas/Perigo)
+    - `pato_normal`: #4CAF50
+    - pato_fast`: #F44336
+    - `pato_resistant`: #2196F3
+    - `card_offensive`: #3D0B0B
+    - `card_utility`: #0B243D
+
+#### [NEW] [styles.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/values/styles.xml)
+- Criar estilos reutilizáveis:
+    - `Style.RogueDucks.Button`: Botões com cantos arredondados e ripple.
+    - `Style.RogueDucks.Text.Title`: Texto grande e negrito para títulos.
+    - `Style.RogueDucks.Text.HUD`: Texto otimizado para leitura rápida no jogo.
+
+---
+
+### 2. Feedback de Interação
+
+#### [NEW] [Shape Drawables](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/drawable/)
+- `bg_button.xml`: Selector com estados `pressed` e `normal` (com ripple no v21+).
+- `bg_card_round.xml`: Shape com bordas arredondadas (12dp) e stroke suave.
 
 #### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- **`handleDuckClick`**: Salvar as coordenadas X/Y do clique *antes* de aplicar dano ao pato principal para evitar NPE caso ele morra e sua View seja limpa.
-- **`acionarVento`**: Iterar sobre `new ArrayList<>(patosAtivos)` para evitar `ConcurrentModificationException`.
-- **`acionarBomba`**: Garantir iteração segura sobre cópia da lista.
-- **`removeDuck`**: Adicionar verificações de nulidade extras para segurança.
+- **Feedback de Acerto**: No `aplicarDanoAoPato`, adicionar uma animação de "flash" (mudar alpha/escala rapidamente) usando `ObjectAnimator`.
+- **Feedback de Morte**: Animação de `scaleX/Y` para 0 antes de remover a View.
 
-### 2. Correção de Regressão (Meta/Balanceamento)
+---
 
-#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- Restaurar valores de `meta` e `timeLeft` no `setupWave` seguindo a tabela original do `GAME_DESIGN.md`.
+### 3. Refinamento de Telas (Layouts)
 
-### 3. Melhoria de Feedback (Cooldowns)
+#### [MODIFY] [activity_main.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/activity_main.xml)
+- Aplicar o tema dark e os estilos de botão centralizados.
 
-#### [MODIFY] [activity_game.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/activity_game.xml)
-- Adicionar um `TextView` centralizado em cada slot de habilidade ativa para exibir o tempo restante em segundos.
+#### [MODIFY] [item_carta.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/item_carta.xml)
+- Aplicar `bg_card_round.xml` e ajustar margens/padding para um visual de "card" real.
 
-#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- Atualizar o texto numérico no `startCooldownUIUpdate`.
-
-### 4. Sistema de Pause Global
-
-#### [MODIFY] [activity_game.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/activity_game.xml)
-- Adicionar um botão de Pause (ícone simples) no canto superior.
-
-#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- **Mecânica de Pause**:
-    - Flag `isGamePaused`.
-    - Pausar todos os Animators.
-    - Pausar `blinkHandlers` dos Fantasmas.
-    - Impedir novos spawns e progressão do timer da onda.
-- **Menu de Pause**: `AlertDialog` com:
-    - `Continuar`: Retoma tudo.
-    - `Reiniciar Run`: Reseta `EstadoJogador`, pontos e volta para Onda 1.
-    - `Sair`: Volta para a `MainActivity`.
-- **Botão Voltar**: Sobrescrever `onBackPressed` para abrir o menu de pause.
+#### [MODIFY] [CartaActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/CartaActivity.java)
+- Lógica para mudar a cor de fundo do card conforme o tipo de upgrade (Ofensivo vs Utilitário).
 
 ---
 
 ## Verification Plan
 
-### Automated Tests
-- Build do projeto para validar novas referências de ID e métodos.
-
 ### Manual Verification (Dispositivo Físico)
-1. **Shotgun**: Atirar em patos resistentes e dourados repetidamente para garantir que a morte do alvo não crasha a explosão.
-2. **Vento**: Ativar com muitos patos em tela para validar a iteração segura.
-3. **Meta**: Confirmar na Onda 1 se a meta é 7 e o tempo é 30s.
-4. **Pause**:
-    - Pausar o jogo, esperar 5 segundos, despausar e confirmar que o tempo da onda não passou.
-    - Reiniciar run e confirmar que as cartas/pontos zeram.
-5. **Back Button**: Pressionar o botão de voltar do sistema e confirmar abertura do menu de pause.
+1. **Consistência**: Verificar se o fundo de todas as telas é o mesmo `bg_dark`.
+2. **Botões**: Confirmar o efeito de ripple ou mudança de cor ao tocar.
+3. **Cards**: Validar se os cards de "Shotgun" têm fundo diferente de "Tempo Suspenso".
+4. **Acerto**: Confirmar se o pato "pisca" ou diminui levemente ao ser atingido.
+5. **Transições**: Abrir e fechar o Ranking para checar a fluidez visual.

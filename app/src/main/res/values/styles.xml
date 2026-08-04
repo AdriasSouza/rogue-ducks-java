@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Títulos -->
+    <style name="RogueDucks.Text.Title" parent="android:Widget.TextView">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primary_gold</item>
+        <item name="android:fontFamily">sans-serif-black</item>
+    </style>
+
+    <!-- HUD Text -->
+    <style name="RogueDucks.Text.HUD" parent="android:Widget.TextView">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_light</item>
+    </style>
+
+    <!-- Buttons -->
+    <style name="RogueDucks.Button" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/bg_button</item>
+        <item name="android:textColor">@color/bg_dark</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+</resources>

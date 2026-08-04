@@ -1,11 +1,13 @@
 package com.example.rogueducks;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,6 +73,15 @@ public class CartaActivity extends AppCompatActivity {
 
         txtName.setText(carta.getNome());
         txtDesc.setText(carta.getDescricao());
+
+        // Visual por categoria
+        int colorId;
+        if (carta.getId().equals("shotgun") || carta.getId().equals("double_bullet")) {
+            colorId = R.color.card_offensive;
+        } else {
+            colorId = R.color.card_utility;
+        }
+        view.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, colorId)));
 
         view.setOnClickListener(v -> {
             Intent intent = new Intent();

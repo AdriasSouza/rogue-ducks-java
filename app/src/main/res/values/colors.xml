@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="bg_dark">#1A1A1D</color>
+    <color name="bg_dark_card">#2C2C2E</color>
+    <color name="primary_gold">#F1C40F</color>
+    <color name="secondary_red">#E74C3C</color>
+    <color name="text_light">#ECF0F1</color>
+    <color name="text_muted">#BDC3C7</color>
+
+    <!-- Pato Colors -->
+    <color name="pato_normal">#4CAF50</color>
+    <color name="pato_fast">#F44336</color>
+    <color name="pato_resistant">#2196F3</color>
+    <color name="pato_ghost">#9E9E9E</color>
+    <color name="pato_golden">#FFD700</color>
+
+    <!-- Card Colors -->
+    <color name="card_offensive">#3D0B0B</color>
+    <color name="card_utility">#0B243D</color>
+
+    <!-- Base Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="ripple_color">#40FFFFFF</color>
 </resources>
