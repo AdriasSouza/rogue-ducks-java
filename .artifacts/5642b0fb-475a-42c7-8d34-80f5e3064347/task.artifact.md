@@ -1,0 +1,18 @@
+- [ ] **Correções de Estabilidade (Crashes)**
+    - [ ] Corrigir NPE no `handleDuckClick` (salvar coords antes do dano).
+    - [ ] Garantir iteração sobre cópia (`new ArrayList<>(patosAtivos)`) no Shotgun, Bomba e Vento.
+- [ ] **Correção de Regressão**
+    - [ ] Restaurar meta e tempo de onda originais no `setupWave`.
+- [ ] **Melhorias de HUD e Feedback**
+    - [ ] Adicionar labels numéricos de cooldown no `activity_game.xml`.
+    - [ ] Atualizar timer numérico no `cooldownHandler`.
+- [ ] **Sistema de Pause Global**
+    - [ ] Adicionar botão de Pause no layout.
+    - [ ] Implementar lógica de pause global (Animators, Handlers, Spawns).
+    - [ ] Criar Menu de Pause (`AlertDialog`) com Continuar, Reiniciar, Sair.
+    - [ ] Sobrescrever `onBackPressed` para abrir o Pause.
+- [ ] **Verificação em Dispositivo Físico**
+    - [ ] Validar Shotgun em grupos (estresse de mortes simultâneas).
+    - [ ] Validar Reinício de Run (limpeza total de Views e Handlers).
+    - [ ] Validar Meta de Onda 1 (Meta: 7, Tempo: 30s).
+    - [ ] Atualizar `PROGRESS.md`.

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#34495E"
+    android:padding="16dp"
+    android:gravity="center"
+    android:clickable="true"
+    android:focusable="true"
+    android:elevation="4dp">
+
+    <TextView
+        android:id="@+id/txtCardName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nome da Carta"
+        android:textColor="#F1C40F"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/txtCardDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Descrição do efeito da carta aqui."
+        android:textColor="#BDC3C7"
+        android:textSize="14sp"
+        android:gravity="center" />
+
+</LinearLayout>

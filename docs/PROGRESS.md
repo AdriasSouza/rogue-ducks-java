@@ -1,0 +1,29 @@
+# Checklist de Progresso
+
+- [x] **Etapa 1: Setup e Menu**
+    - [x] Criar MainActivity (Menu Principal).
+    - [x] Configurar navegação para Ranking e Jogo.
+- [x] **Etapa 2: Motor de Jogo Básico**
+    - [x] Implementar GameActivity (Layout base).
+    - [x] Criar classe Pato (Lógica e Movimentação).
+    - [x] Sistema de Spawn de patos (Handler/ObjectAnimator).
+- [x] **Etapa 3: Interação e Pontuação**
+    - [x] Sistema de detecção de clique (OnTouch/OnClick).
+    - [x] Diferenciação de tipos de pato e vida.
+    - [x] HUD (Pontos, Tempo, Onda).
+- [x] **Etapa 4: Sistema de Ondas e Roguelike**
+    - [x] Lógica de meta de onda.
+    - [x] CartaActivity para escolha de upgrades.
+    - [x] Classe EstadoJogador para gerenciar efeitos ativos.
+- [x] **Etapa 5: Persistência**
+    - [x] Implementar SQLite (DBHelper).
+    - [x] RankingActivity para exibir histórico (ListView).
+- [x] **Etapa 6: Polimento e Mecânicas Avançadas**
+    - [x] Implementar habilidades ativas (Bomba, Pausa, Vento).
+    - [x] Comportamento especial dos patos (Fantasma, Dourado).
+    - [x] Uso de Vector Drawables para assets (Sprites concluídos).
+    - [x] Sistema de Stacking para todas as cartas.
+    - [x] Projeto funcional e testado em dispositivo físico.
+    - [x] Ajustes de balanceamento e tetos de stacking.
+    - [x] Correção de bugs críticos (ConcurrentModification, NPE).
+    - [x] Sistema de Pause Global e Menu de Opções.

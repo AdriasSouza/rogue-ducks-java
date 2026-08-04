@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center"
+    android:background="#2C3E50">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ESCOLHA UM UPGRADE"
+        android:textColor="#ECF0F1"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp" />
+
+    <LinearLayout
+        android:id="@+id/cardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <!-- Slots de Carta serão preenchidos via código ou definidos aqui -->
+        <include layout="@layout/item_carta" android:id="@+id/card1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_margin="8dp" />
+        <include layout="@layout/item_carta" android:id="@+id/card2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_margin="8dp" />
+        <include layout="@layout/item_carta" android:id="@+id/card3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_margin="8dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

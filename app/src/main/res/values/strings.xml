@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Rogue Ducks</string>
+    <string name="btn_play">Jogar</string>
+    <string name="btn_ranking">Ranking</string>
+    <string name="btn_exit">Sair</string>
+    <string name="title_game">Game Screen (Placeholder)</string>
+    <string name="title_ranking">Ranking Screen (Placeholder)</string>
+    <string name="title_carta">Escolha sua Carta (Placeholder)</string>
+</resources>
