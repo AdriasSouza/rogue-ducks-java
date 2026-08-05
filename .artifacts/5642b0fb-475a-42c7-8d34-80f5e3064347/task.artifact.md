@@ -1,13 +1,14 @@
-- [x] **Preparação de Modelos**
-    - [x] Adicionar setters de vida em `Pato.java`.
-- [x] **Refinamento de Gameplay e Balanceamento**
-    - [x] Implementar limite de concorrência no `spawnNextDuck`.
-    - [x] Implementar escalonamento de HP para patos Resistentes.
-    - [x] Refatorar `acionarPausa` (Tempo Suspenso) para ser local e não-bloqueante de spawn.
-    - [x] Remover dependência de `isTimeFrozen` no `timerRunnable`.
-- [x] **Correções de HUD e Feedback**
-    - [x] Validar e corrigir referências de cooldown UI.
-    - [x] Sincronizar interatividade do botão com o cooldown.
-- [x] **Verificação e Git**
-    - [x] Validar build e fluxos.
-    - [x] Fazer commit: "balanceamento - densidade de patos, escalonamento de hp e refina tempo suspenso".
+- [ ] **Telas Informativas (MainActivity)**
+    - [ ] Criar `res/layout/dialog_info.xml`.
+    - [ ] Criar `res/layout/dialog_galeria.xml`.
+    - [ ] Criar `res/layout/item_galeria.xml`.
+    - [ ] Adicionar botões à `activity_main.xml`.
+    - [ ] Implementar lógica dos Dialogs na `MainActivity.java`.
+- [ ] **Feedback Visual e Ambientação (GameActivity)**
+    - [ ] Criar `res/drawable/effect_hit.xml`.
+    - [ ] Implementar sorteio de background na `GameActivity.java`.
+    - [ ] Implementar `mostrarEfeitoImpacto` com segurança (null-check).
+    - [ ] Integrar novo ícone de Ricochete na `CartaActivity.java`.
+- [ ] **Finalização**
+    - [ ] Validar build e commits git.
+    - [ ] Atualizar `PROGRESS.md`.

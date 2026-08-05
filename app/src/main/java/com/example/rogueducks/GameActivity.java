@@ -85,6 +85,11 @@ public class GameActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         gameContainer = findViewById(R.id.gameContainer);
+
+        // Background Aleatório
+        int[] backgrounds = {R.drawable.bg_sky, R.drawable.city_landscape, R.drawable.dawn_landscape, R.drawable.desert_landscape};
+        gameContainer.setBackgroundResource(backgrounds[random.nextInt(backgrounds.length)]);
+
         txtScore = findViewById(R.id.txtScore);
         txtWave = findViewById(R.id.txtWave);
         txtTime = findViewById(R.id.txtTime);
@@ -445,15 +450,10 @@ public class GameActivity extends AppCompatActivity {
         
         pato.sofrerDano(dano);
 
-        // Feedback Visual de Hit (Não-bloqueante)
-        ImageView view = pato.getView();
-        if (view != null) {
-            ObjectAnimator pulseX = ObjectAnimator.ofFloat(view, "scaleX", 1.0f, 1.2f, 1.0f);
-            ObjectAnimator pulseY = ObjectAnimator.ofFloat(view, "scaleY", 1.0f, 1.2f, 1.0f);
-            pulseX.setDuration(100);
-            pulseY.setDuration(100);
-            pulseX.start();
-            pulseY.start();
+        // Feedback Visual de Impacto (Não-bloqueante)
+        if (pato.getView() != null) {
+            mostrarEfeitoImpacto(pato.getView().getTranslationX() + pato.getView().getWidth()/2f,
+                                 pato.getView().getTranslationY() + pato.getView().getHeight()/2f);
         }
 
         if (pato.getVidaAtual() <= 0) {
@@ -465,9 +465,45 @@ public class GameActivity extends AppCompatActivity {
             // Animação de Morte (Paralela à remoção)
             executarAnimacaoMorte(pato);
         } else {
+            // Mantém feedback de alpha proporcional
             float alpha = (float) pato.getVidaAtual() / pato.getVidaMaxima();
-            if (view != null) view.setAlpha(Math.max(0.2f, alpha));
+            if (pato.getView() != null) pato.getView().setAlpha(Math.max(0.2f, alpha));
         }
+    }
+
+    private void mostrarEfeitoImpacto(float x, float y) {
+        View impact = new View(this);
+        impact.setBackgroundResource(R.drawable.effect_hit);
+        
+        int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(size, size);
+        impact.setLayoutParams(params);
+        
+        impact.setTranslationX(x - size / 2f);
+        impact.setTranslationY(y - size / 2f);
+        
+        gameContainer.addView(impact);
+
+        ObjectAnimator sX = ObjectAnimator.ofFloat(impact, "scaleX", 0.2f, 1.0f);
+        ObjectAnimator sY = ObjectAnimator.ofFloat(impact, "scaleY", 0.2f, 1.0f);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(impact, "alpha", 1.0f, 0f);
+
+        sX.setDuration(150);
+        sY.setDuration(150);
+        alpha.setDuration(150);
+
+        alpha.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (impact.getParent() != null) {
+                    ((RelativeLayout) impact.getParent()).removeView(impact);
+                }
+            }
+        });
+
+        sX.start();
+        sY.start();
+        alpha.start();
     }
 
     private void executarAnimacaoMorte(Pato pato) {

@@ -91,7 +91,7 @@ public class CartaActivity extends AppCompatActivity {
             case "screen_bomb": iconResId = R.drawable.icon_bomb; break;
             case "time_freeze": iconResId = R.drawable.icon_time_freeze; break;
             case "headwind": iconResId = R.drawable.icon_headwind; break;
-            case "ricochet": iconResId = R.drawable.icon_double_bullet; break; // Placeholder
+            case "ricochet": iconResId = R.drawable.icon_ricochete; break;
             default: iconResId = 0; break;
         }
         

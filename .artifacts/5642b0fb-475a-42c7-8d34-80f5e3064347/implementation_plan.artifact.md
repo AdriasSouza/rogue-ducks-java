@@ -1,65 +1,57 @@
-# Plano de Implementação - Carta Ricochete (V3 Final)
+# Plano de Polimento Final e Conteúdo Informativo
 
-Este plano detalha a implementação da 6ª carta, **Ricochete**, com a condição de disparo exata e estruturalmente segura para evitar cascatas.
+Este plano detalha a adição de telas informativas (Lore, Galeria, Créditos), backgrounds aleatórios e um novo feedback visual de impacto de tiro, fechando o ciclo de polimento estético do projeto.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Condição Rígida de Disparo**: O Ricochete disparará apenas se:
-> `pato.getVidaAtual() <= 0 && nivelRicochete > 0 && isDiretoDoClique == true && isRicochetHit == false`.
-> Isso garante que o efeito ocorra apenas na morte pelo clique original e nunca em reações secundárias.
+> Utilizaremos **AlertDialogs customizados** para as telas de "Como Jogar", "Galeria" e "Sobre", mantendo a agilidade de desenvolvimento e a consistência visual dark/gold sem a necessidade de novas Activities.
+> O efeito de acerto será uma pequena explosão avermelhada de ~150ms, visualmente distinta do círculo dourado da Shotgun.
 
 ## Proposed Changes
 
-### 1. Documentação de Design
+### 1. Telas Informativas (Dialogs Customizados)
 
-#### [MODIFY] [GAME_DESIGN.md](file:///home/iartes/AndroidStudioProjects/RogueDucks/docs/GAME_DESIGN.md)
-- Adicionar **Ricochete (Passiva)**:
-    - **Gatilho**: Morte de um pato via clique direto.
-    - **Busca**: Localiza o pato **mais próximo** (nearest) dentro de um raio de 100dp.
-    - **Dano**:
-        - Nível 1: 50% do dano original (mín 1).
-        - Nível 2: 75% do dano original.
-    - **Limite**: Máximo Nível 2. Estruturalmente impossível de encadear (No Chaining).
+#### [NEW] [dialog_info.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/dialog_info.xml)
+- Layout genérico reutilizável para Lore e Sobre, com `TextView` para título e conteúdo formatado.
 
----
+#### [NEW] [dialog_galeria.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/dialog_galeria.xml)
+- Layout com `ScrollView` e `LinearLayout` vertical para listar as 6 cartas:
+    - Cada item terá: `ImageView` (Ícone), `TextView` (Nome da Carta) e `TextView` (Descrição detalhada).
 
-### 2. Modelos e Estado
+#### [MODIFY] [activity_main.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/activity_main.xml)
+- Reorganizar botões para incluir: **Jogar**, **Galeria**, **Como Jogar**, **Sobre**, **Ranking**, **Sair**.
+- Aplicar o estilo `RogueDucks.Button` em todos.
 
-#### [MODIFY] [EstadoJogador.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/EstadoJogador.java)
-- Adicionar `int nivelRicochete = 0`.
-- Método `getFatorRicochete()`: Retorna 0.5f (Nível 1) ou 0.75f (Nível 2).
-- Atualizar `ativarUpgrade(id)` para suportar o stacking de "ricochete" até o limite de 2.
-
-#### [MODIFY] [CartaActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/CartaActivity.java)
-- Adicionar a carta Ricochete ao pool inicial.
-- **Lógica de Pool Dinâmico**: Antes de sortear, verificar o `nivelRicochete` no `EstadoJogador` enviado via Intent. Se for >= 2, remover a carta do pool temporário de sorteio.
+#### [MODIFY] [MainActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/MainActivity.java)
+- Implementar listeners para os novos botões chamando métodos que inflam e exibem os `AlertDialogs` customizados.
 
 ---
 
-### 3. Lógica de Jogo (GameActivity)
+### 2. Feedback Visual e Ambientação
+
+#### [NEW] [effect_hit.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/drawable/effect_hit.xml)
+- Criar um drawable vetorial simples ou `shape` estrela/estilhaço na cor laranja/vermelho.
 
 #### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- **Refatorar `aplicarDanoAoPato`**:
-    - Nova assinatura: `aplicarDanoAoPato(Pato pato, int dano, boolean isDiretoDoClique, boolean isRicochetHit)`.
-- **Implementar `buscarPatoMaisProximo(Pato origem, float raioPx)`**:
-    - Busca linear em `patosAtivos` calculando distâncias e retornando o menor valor dentro do raio.
-- **Implementar `dispararRicochete(Pato origem, int danoOriginal)`**:
-    - Encapsula a lógica de busca e aplicação do dano secundário (com `isRicochetHit = true`).
-- **Atualizar todos os Call Sites**:
-    - Clique direto: `(..., true, false)`.
-    - Shotgun: `(..., false, false)`.
-    - Ricochete: `(..., false, true)`.
-    - Bomba: `(..., false, false)`.
+- **Background Aleatório**: No `onCreate`, realizar sorteio entre `city_landscape`, `dawn_landscape`, `desert_landscape` e `bg_sky`.
+- **Efeito de Impacto**: Substituir o pulso de escala por `mostrarEfeitoImpacto(x, y)`:
+    - View pequena (35dp), cor avermelhada, animação de escala rápida (0.2 -> 1.0) e fade out em 150ms.
+
+---
+
+### 3. Assets de Ricochete
+
+#### [MODIFY] [CartaActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/CartaActivity.java)
+- Atualizar o mapeamento de ícones para usar o novo `icon_ricochete.png` na tela de escolha.
 
 ---
 
 ## Verification Plan
 
 ### Manual Verification (Dispositivo Físico)
-1. **Pato Único**: Confirmar flash normal.
-2. **Nearest Target**: Validar que o ricochete busca o vizinho mais próximo, não um aleatório.
-3. **No Chain**: Matar um pato com o Ricochete e confirmar que ele não gera um terceiro disparo.
-4. **Shotgun Interaction**: Validar que o Ricochete ocorre apenas uma vez por clique, mesmo que o Shotgun mate 3 patos.
-5. **Stacking**: Validar que no Nível 2 o dano causado no alvo secundário é visivelmente maior.
-6. **Pool Removal**: Confirmar que a carta desaparece após a 2ª escolha.
+1. **Menu**: Confirmar se todos os 6 botões aparecem corretamente e se os Dialogs abrem com o tema dark.
+2. **Lore**: Validar se o texto "O FIM DOS DIAS DO PATO" está legível e bem formatado.
+3. **Galeria**: Confirmar se as 6 cartas aparecem com seus ícones e descrições corretas.
+4. **Acerto**: Atirar em um pato (sem shotgun) e confirmar se o efeito é um "estilhaço vermelho" pequeno, diferente do círculo dourado.
+5. **Background**: Reiniciar o jogo 4-5 vezes para confirmar se o cenário muda aleatoriamente entre as opções disponíveis.

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/bg_dark">
+
+    <TextView
+        android:id="@+id/txtDialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Título"
+        style="@style/RogueDucks.Text.Title"
+        android:textSize="24sp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/txtDialogContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Conteúdo do diálogo aqui."
+        android:textColor="@color/text_light"
+        android:textSize="16sp"
+        android:lineSpacingExtra="4dp" />
+
+    <Button
+        android:id="@+id/btnDialogClose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Voltar"
+        style="@style/RogueDucks.Button"
+        android:layout_gravity="end"
+        android:layout_marginTop="24dp" />
+
+</LinearLayout>

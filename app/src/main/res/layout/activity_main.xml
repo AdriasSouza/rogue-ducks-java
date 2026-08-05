@@ -13,30 +13,74 @@
         android:layout_height="wrap_content"
         android:text="@string/app_name"
         style="@style/RogueDucks.Text.Title"
-        android:layout_marginBottom="48dp" />
+        android:layout_marginBottom="32dp" />
 
-    <Button
-        android:id="@+id/btnPlay"
-        android:layout_width="240dp"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_play"
-        style="@style/RogueDucks.Button"
-        android:layout_marginBottom="16dp" />
+        android:orientation="horizontal"
+        android:gravity="center">
 
-    <Button
-        android:id="@+id/btnRanking"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_ranking"
-        style="@style/RogueDucks.Button"
-        android:layout_marginBottom="16dp" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginEnd="16dp">
 
-    <Button
-        android:id="@+id/btnExit"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_exit"
-        style="@style/RogueDucks.Button"
-        android:backgroundTint="@color/secondary_red" />
+            <Button
+                android:id="@+id/btnPlay"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_play"
+                style="@style/RogueDucks.Button"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnRanking"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_ranking"
+                style="@style/RogueDucks.Button"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnExit"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_exit"
+                style="@style/RogueDucks.Button"
+                android:backgroundTint="@color/secondary_red" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnGaleria"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="Galeria"
+                style="@style/RogueDucks.Button"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnLore"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="Como Jogar"
+                style="@style/RogueDucks.Button"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnAbout"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="Sobre"
+                style="@style/RogueDucks.Button" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>
