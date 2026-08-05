@@ -3,6 +3,8 @@ package com.example.rogueducks;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -18,11 +20,14 @@ import java.util.List;
 public class CartaActivity extends AppCompatActivity {
 
     private final List<Carta> poolDeCartas = new ArrayList<>();
+    private ToneGenerator toneGenerator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_carta);
+
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 50);
 
         EstadoJogador estado = (EstadoJogador) getIntent().getSerializableExtra("ESTADO_JOGADOR");
         inicializarPool(estado);
@@ -112,10 +117,22 @@ public class CartaActivity extends AppCompatActivity {
         view.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, colorId)));
 
         view.setOnClickListener(v -> {
+            if (toneGenerator != null) {
+                toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2, 100);
+            }
             Intent intent = new Intent();
             intent.putExtra("CARTA_ESCOLHIDA", carta);
             setResult(RESULT_OK, intent);
             finish();
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
     }
 }

@@ -1,76 +1,50 @@
-# Walkthrough - Balanceamento e Refinamento de Gameplay
+# Walkthrough - Polimento Final e Conteúdo Informativo
 
-Nesta etapa, focamos em melhorar o ritmo do jogo, tornar os upgrades mais estratégicos e corrigir problemas de feedback visual no HUD.
+Nesta etapa final, expandimos a profundidade do jogo com elementos de narrativa (Lore), uma galeria de habilidades, e refinamos o feedback visual de combate e a ambientação.
 
 ## Alterações Realizadas
 
-### 1. Sistema de Spawn e Densidade
-- **Limite de Concorrência**: O jogo agora permite mais patos simultâneos conforme a onda avança:
-    - Ondas 1-2: Máximo 2.
-    - Ondas 3-5: Máximo 4.
-    - Ondas 6+: Máximo 6.
-- **Lógica de Retentativa**: Se o limite for atingido, o sistema aguarda 400ms antes de tentar spawnar o próximo pato, garantindo um fluxo denso mas estável.
-- **Buff Indireto da Shotgun**: Com mais patos em voo, a probabilidade de acertos múltiplos com a Shotgun aumentou significativamente.
+### 1. Telas Informativas (Dialogs Customizados)
+- **Menu Principal**: Adicionados botões para **Galeria**, **Como Jogar** (Lore) e **Sobre** (Créditos).
+- **Interface de Leitura**: Implementamos layouts customizados (`dialog_info.xml` e `dialog_galeria.xml`) que mantêm o tema dark/gold sem a necessidade de transições pesadas de Activity.
+- **Galeria de Cartas**: Uma lista completa com os 6 ícones e descrições de todas as habilidades e passivas do jogo.
 
-### 2. Escalonamento de Dificuldade
-- **Tanques Progressivos**: Patos **Resistentes** agora ganham +1 HP a cada 4 ondas (Teto de 6 HP).
-- **Consistência Visual**: Tanto a `vidaAtual` quanto a `vidaMaxima` são atualizadas no spawn, garantindo que o feedback de alpha proporcional funcione corretamente em patos com HP extra.
+### 2. Ambientação Dinâmica
+- **Backgrounds Aleatórios**: O jogo agora sorteia entre 4 cenários ao iniciar uma partida (`city`, `dawn`, `desert` e o original `sky`), garantindo variedade visual.
 
-### 3. Refinamento de Habilidades
-- **Tempo Suspenso Local**: A habilidade agora pausa apenas os patos presentes na tela no momento da ativação. Novos patos continuam surgindo e se movendo, evitando que o tempo da onda acabe "vazio".
-- **Timer da Onda**: O timer agora corre de forma independente, sendo interrompido apenas pelo Pause Global.
+### 3. Feedback Visual de Combate (Impacto)
+- **Efeito de Estilhaço**: Substituímos o pulso de escala genérico por um novo efeito de "impacto de bala" (`effect_hit.xml`). É um flash avermelhado rápido (150ms) que nasce no ponto exato do acerto.
+- **Diferenciação Visual**: Este efeito é propositalmente menor e de cor diferente da explosão dourada da Shotgun, permitindo que o jogador saiba exatamente o tipo de dano que causou.
+- **Alpha Proporcional**: Confirmado que o feedback visual de vida restante (pato ficando mais transparente) coexiste perfeitamente com o novo efeito de impacto.
 
-### 4. Correções de HUD e UX
-- **Restauração de Cooldown**: Validamos e corrigimos os IDs das Views de cooldown. O overlay e o texto numérico ("Xs") estão visíveis novamente sobre os botões.
-- **Interatividade**: Os botões de habilidade ficam explicitamente não-clicáveis durante o cooldown, prevenindo disparos acidentais.
+### 4. Correções e Integração de Assets
+- **Ricochete**: O ícone oficial (`icon_ricochete.png`) foi integrado na `CartaActivity` e na Galeria.
+- **Segurança**: Aplicado null-check (`view.getParent() != null`) em todos os novos disparos de efeitos visuais para evitar instabilidade.
 
 ---
 
-## Revisão de Código Solicitada
+## Revisão Técnica
 
-### [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-
-#### Spawn com Limite e HP Escalonado
+### Lógica de Impacto Coexistente
 ```java
-private void spawnNextDuck() {
-    // ...
-    int maxSimultaneos = (wave <= 2) ? 2 : (wave <= 5) ? 4 : 6;
+// Em GameActivity.java -> aplicarDanoAoPato
+// 1. Feedback de Clique (Sempre ocorre)
+mostrarEfeitoImpacto(x, y);
 
-    if (patosAtivos.size() >= maxSimultaneos) {
-        gameHandler.postDelayed(this::spawnNextDuck, 400); // Tenta de novo em breve
-        return;
-    }
-    // ...
-    if (tipo == Pato.Tipo.RESISTENTE) {
-        int hpEscalonado = Math.min(6, 3 + (wave / 4));
-        pato.setVidaMaxima(hpEscalonado); // Garante alpha proporcional correto
-        pato.setVidaAtual(hpEscalonado);
-    }
-    // ...
+// 2. Feedback de Vida (Apenas se sobreviver)
+if (pato.getVidaAtual() > 0) {
+    float alpha = (float) pato.getVidaAtual() / pato.getVidaMaxima();
+    pato.getView().setAlpha(Math.max(0.2f, alpha));
 }
 ```
 
-#### Tempo Suspenso Local
+### Sorteio de Background
 ```java
-private void acionarPausa() {
-    // ...
-    List<Pato> patosParaPausar = new ArrayList<>(patosAtivos); // Captura instantâneo
-    for (Pato p : patosParaPausar) {
-        if (p.getAnimator() != null) p.getAnimator().pause();
-        p.setBlinkPaused(true);
-    }
-
-    gameHandler.postDelayed(() -> {
-        for (Pato p : patosParaPausar) {
-            if (p.isAtivo() && !isPaused) { // Só retoma se o jogo não estiver no Pause Global
-                if (p.getAnimator() != null) p.getAnimator().resume();
-                p.setBlinkPaused(false);
-            }
-        }
-    }, estadoJogador.getDuracaoPausaBase() * 1000L);
-}
+int[] backgrounds = {R.drawable.bg_sky, R.drawable.city_landscape,
+                     R.drawable.dawn_landscape, R.drawable.desert_landscape};
+gameContainer.setBackgroundResource(backgrounds[random.nextInt(backgrounds.length)]);
 ```
 
 ---
 > [!IMPORTANT]
-> O escalonamento de HP exige que o jogador busque upgrades de **Bala Dupla** para manter a eficiência em ondas avançadas.
+> O projeto foi consolidado com o commit final no Git e está pronto para a apresentação acadêmica. Todas as mecânicas, persistência, balanceamento e polimento visual foram validados.

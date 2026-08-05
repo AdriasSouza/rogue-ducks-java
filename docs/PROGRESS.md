@@ -32,3 +32,5 @@
     - [x] Feedback visual avançado (Explosão Shotgun e Cooldown Interativo).
     - [x] Integração de sprites Pixel Art e Background.
     - [x] Nova carta: Ricochete (implementação estruturalmente segura).
+    - [x] Polish final: Galeria, Lore, Créditos e Impacto visual.
+    - [x] Backgrounds aleatórios por partida.

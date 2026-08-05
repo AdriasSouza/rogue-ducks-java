@@ -1,57 +1,63 @@
-# Plano de Polimento Final e Conteúdo Informativo
+# Plano de Implementação - Sistema de Áudio (BGM e SFX)
 
-Este plano detalha a adição de telas informativas (Lore, Galeria, Créditos), backgrounds aleatórios e um novo feedback visual de impacto de tiro, fechando o ciclo de polimento estético do projeto.
+Este plano descreve a integração de música de fundo e efeitos sonoros nativos para melhorar a imersão e o feedback tátil do jogo.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> Utilizaremos **AlertDialogs customizados** para as telas de "Como Jogar", "Galeria" e "Sobre", mantendo a agilidade de desenvolvimento e a consistência visual dark/gold sem a necessidade de novas Activities.
-> O efeito de acerto será uma pequena explosão avermelhada de ~150ms, visualmente distinta do círculo dourado da Shotgun.
+> **Integração com Pause**: A música (BGM) será pausada automaticamente ao abrir o menu de pause ou minimizar o app, e retomada apenas se o jogo estiver em estado "Ativo".
+> **Sons Nativos**: Utilizaremos a `ToneGenerator` API para efeitos sonoros, garantindo latência zero e economia de recursos sem precisar de múltiplos arquivos de áudio.
 
 ## Proposed Changes
 
-### 1. Telas Informativas (Dialogs Customizados)
-
-#### [NEW] [dialog_info.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/dialog_info.xml)
-- Layout genérico reutilizável para Lore e Sobre, com `TextView` para título e conteúdo formatado.
-
-#### [NEW] [dialog_galeria.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/dialog_galeria.xml)
-- Layout com `ScrollView` e `LinearLayout` vertical para listar as 6 cartas:
-    - Cada item terá: `ImageView` (Ícone), `TextView` (Nome da Carta) e `TextView` (Descrição detalhada).
-
-#### [MODIFY] [activity_main.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/activity_main.xml)
-- Reorganizar botões para incluir: **Jogar**, **Galeria**, **Como Jogar**, **Sobre**, **Ranking**, **Sair**.
-- Aplicar o estilo `RogueDucks.Button` em todos.
-
-#### [MODIFY] [MainActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/MainActivity.java)
-- Implementar listeners para os novos botões chamando métodos que inflam e exibem os `AlertDialogs` customizados.
-
----
-
-### 2. Feedback Visual e Ambientação
-
-#### [NEW] [effect_hit.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/drawable/effect_hit.xml)
-- Criar um drawable vetorial simples ou `shape` estrela/estilhaço na cor laranja/vermelho.
+### 1. Música de Fundo (GameActivity)
 
 #### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- **Background Aleatório**: No `onCreate`, realizar sorteio entre `city_landscape`, `dawn_landscape`, `desert_landscape` e `bg_sky`.
-- **Efeito de Impacto**: Substituir o pulso de escala por `mostrarEfeitoImpacto(x, y)`:
-    - View pequena (35dp), cor avermelhada, animação de escala rápida (0.2 -> 1.0) e fade out em 150ms.
+- **Campos**: Adicionar `private MediaPlayer mediaPlayer`.
+- **`onCreate`**: Inicializar o player com `R.raw.bmg_ducks`, definir `setLooping(true)` e `setVolume(0.5f, 0.5f)`.
+- **Ciclo de Vida**:
+    - **`onResume`**: Chamar `mediaPlayer.start()` apenas se `!isPaused`.
+    - **`onPause`**: Chamar `mediaPlayer.pause()`.
+    - **`onDestroy`**: Chamar `mediaPlayer.release()` e limpar referência.
+- **Menu de Pause**:
+    - **`showPauseMenu`**: Pausar a música ao abrir o diálogo.
+    - **"Continuar"**: Retomar a música ao voltar pro jogo.
+    - **"Sair/Reiniciar"**: Parar/Resetar conforme a transição.
 
 ---
 
-### 3. Assets de Ricochete
+### 2. Efeitos Sonoros (ToneGenerator)
 
-#### [MODIFY] [CartaActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/CartaActivity.java)
-- Atualizar o mapeamento de ícones para usar o novo `icon_ricochete.png` na tela de escolha.
+#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java) e [CartaActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/CartaActivity.java)
+- **Campos**: Adicionar `private ToneGenerator toneGenerator`.
+- **`onCreate`**: Inicializar com `AudioManager.STREAM_MUSIC` e volume 50.
+- **Mapeamento de Sons**:
+    - **Hit**: `ToneGenerator.TONE_PROP_BEEP` (100ms).
+    - **Shotgun**: `ToneGenerator.TONE_PROP_ACK` (150ms).
+    - **Wave Success**: `ToneGenerator.TONE_PROP_PROMPT` (200ms).
+    - **Game Over**: `ToneGenerator.TONE_PROP_NACK` (300ms).
+    - **Confirmação Carta**: `ToneGenerator.TONE_PROP_BEEP2` (100ms).
+- **Helper**: Criar método `playSfx(int toneType, int duration)` para facilitar disparos.
+
+---
+
+### 3. Organização de Arquivos
+
+#### [NEW] [res/raw/](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/raw/)
+- Garantir a existência do diretório para o arquivo `bmg_ducks.mp3`.
 
 ---
 
 ## Verification Plan
 
 ### Manual Verification (Dispositivo Físico)
-1. **Menu**: Confirmar se todos os 6 botões aparecem corretamente e se os Dialogs abrem com o tema dark.
-2. **Lore**: Validar se o texto "O FIM DOS DIAS DO PATO" está legível e bem formatado.
-3. **Galeria**: Confirmar se as 6 cartas aparecem com seus ícones e descrições corretas.
-4. **Acerto**: Atirar em um pato (sem shotgun) e confirmar se o efeito é um "estilhaço vermelho" pequeno, diferente do círculo dourado.
-5. **Background**: Reiniciar o jogo 4-5 vezes para confirmar se o cenário muda aleatoriamente entre as opções disponíveis.
+1. **BGM Contínuo**: Iniciar o jogo e confirmar que a música toca em loop e o volume não abafa o som do sistema.
+2. **Sincronia de Pause**:
+    - Pausar o jogo manualmente: a música deve parar imediatamente.
+    - Minimizar o app (Home): a música deve parar.
+    - Voltar ao app: se estava pausado, a música **não** deve tocar até você clicar em "Continuar".
+3. **SFX de Feedback**:
+    - Clicar num pato: ouvir o "beep" agudo.
+    - Usar Shotgun: ouvir o som mais grave/distinto da explosão.
+    - Ganhar a onda: ouvir o som de sucesso antes da tela de cartas.
+4. **Cleanup**: Confirmar via Logcat que não há erros de "MediaPlayer finalized without being released" ao sair e entrar no jogo várias vezes.

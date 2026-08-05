@@ -5,6 +5,9 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -58,6 +61,8 @@ public class GameActivity extends AppCompatActivity {
     private EstadoJogador estadoJogador = new EstadoJogador();
     private final List<Pato> patosAtivos = new ArrayList<>();
     private DatabaseHelper dbHelper;
+    private MediaPlayer mediaPlayer;
+    private ToneGenerator toneGenerator;
 
     // Cooldown states (ms)
     private long lastBombaTime = 0, lastPausaTime = 0, lastVentoTime = 0;
@@ -85,6 +90,15 @@ public class GameActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         gameContainer = findViewById(R.id.gameContainer);
+
+        // Inicializar Áudio
+        mediaPlayer = MediaPlayer.create(this, R.raw.bmg_ducks);
+        if (mediaPlayer != null) {
+            mediaPlayer.setLooping(true);
+            mediaPlayer.setVolume(0.5f, 0.5f);
+            mediaPlayer.start();
+        }
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 50);
 
         // Background Aleatório
         int[] backgrounds = {R.drawable.bg_sky, R.drawable.city_landscape, R.drawable.dawn_landscape, R.drawable.desert_landscape};
@@ -353,6 +367,11 @@ public class GameActivity extends AppCompatActivity {
             float raioPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 
                     estadoJogador.getRaioShotgunDp(), getResources().getDisplayMetrics());
             
+            // Efeito Sonoro da Shotgun (Uma vez por clique)
+            if (toneGenerator != null) {
+                toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
+            }
+
             mostrarEfeitoShotgun(clickX, clickY, raioPx);
 
             List<Pato> copiaPatos = new ArrayList<>(patosAtivos);
@@ -449,6 +468,11 @@ public class GameActivity extends AppCompatActivity {
         if (!pato.isAtivo()) return;
         
         pato.sofrerDano(dano);
+
+        // Feedback Sonoro de Hit (Apenas clique direto)
+        if (isDiretoDoClique && toneGenerator != null) {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 100);
+        }
 
         // Feedback Visual de Impacto (Não-bloqueante)
         if (pato.getView() != null) {
@@ -566,6 +590,10 @@ public class GameActivity extends AppCompatActivity {
         if (now - lastBombaTime < cd) return;
         lastBombaTime = now;
         
+        if (toneGenerator != null) {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
+        }
+
         for (Pato p : new ArrayList<>(patosAtivos)) aplicarDanoAoPato(p, 999, false, false);
     }
 
@@ -670,6 +698,8 @@ public class GameActivity extends AppCompatActivity {
         if (isPaused || isWaveEnded) return;
         isPaused = true;
         
+        if (mediaPlayer != null) mediaPlayer.pause();
+
         for (Pato p : patosAtivos) {
             if (p.getAnimator() != null) p.getAnimator().pause();
             p.setBlinkPaused(true);
@@ -681,6 +711,7 @@ public class GameActivity extends AppCompatActivity {
             switch (which) {
                 case 0: // Continuar
                     isPaused = false;
+                    if (mediaPlayer != null) mediaPlayer.start();
                     for (Pato p : patosAtivos) {
                         if (p.getAnimator() != null) p.getAnimator().resume();
                         p.setBlinkPaused(false);
@@ -739,6 +770,9 @@ public class GameActivity extends AppCompatActivity {
         }
         
         if (ducksKilled >= meta) {
+            if (toneGenerator != null) {
+                toneGenerator.startTone(ToneGenerator.TONE_PROP_PROMPT, 200);
+            }
             Intent intent = new Intent(this, CartaActivity.class);
             intent.putExtra("ESTADO_JOGADOR", estadoJogador);
             cartaLauncher.launch(intent);
@@ -748,6 +782,9 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void showGameOverDialog() {
+        if (toneGenerator != null) {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK, 300);
+        }
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Fim de Jogo!");
         builder.setMessage("Você chegou até a onda " + wave + " com " + score + " pontos.\nDigite seu nome:");
@@ -765,11 +802,22 @@ public class GameActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (!isPaused && mediaPlayer != null) {
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         isWaveActive = false;
         gameHandler.removeCallbacksAndMessages(null);
         cooldownHandler.removeCallbacksAndMessages(null);
+        if (mediaPlayer != null) {
+            mediaPlayer.pause();
+        }
     }
 
     @Override
@@ -777,5 +825,13 @@ public class GameActivity extends AppCompatActivity {
         super.onDestroy();
         gameHandler.removeCallbacksAndMessages(null);
         cooldownHandler.removeCallbacksAndMessages(null);
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
     }
 }
