@@ -25,6 +25,7 @@ Sobreviver ao maior número de ondas possível, abatendo patos para atingir meta
     - *Bomba de Tela*: Limpa todos os patos da tela. (Cooldown Base: 20s. Stack: -3s de cooldown por nível. Piso Mínimo: 8s).
     - *Tempo Suspenso*: Pausa o movimento dos patos por X segundos. (Duração Base: 3s. Cooldown: 25s fixo. Stack: +1s de duração por nível. Teto Máximo: 6s).
     - *Vento Contrário*: Reduz a velocidade de todos os patos ativos. (Redução Base: 25% por 5s. Cooldown: 15s fixo. Stack: +10% de redução por nível. Teto Máximo: 55%).
+    - *Ricochete (Passiva)*: Ao matar um pato via clique direto, a bala atinge o pato mais próximo (raio 100dp). (Nível 1: 50% dano. Nível 2: 75% dano. Máx Nível 2. Não encadeia).
     - *Ímã*: Patos lentos perto do toque.
 - **Passivas**:
     - *Mais Tempo*: Aumenta duração da onda.

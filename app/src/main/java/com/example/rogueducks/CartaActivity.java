@@ -24,7 +24,8 @@ public class CartaActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_carta);
 
-        inicializarPool();
+        EstadoJogador estado = (EstadoJogador) getIntent().getSerializableExtra("ESTADO_JOGADOR");
+        inicializarPool(estado);
         
         List<Carta> selecionadas = sortearCartasDistintas(3);
         
@@ -33,12 +34,17 @@ public class CartaActivity extends AppCompatActivity {
         configurarSlot(findViewById(R.id.card3), selecionadas.size() > 2 ? selecionadas.get(2) : null);
     }
 
-    private void inicializarPool() {
+    private void inicializarPool(EstadoJogador estado) {
         poolDeCartas.add(new Carta("shotgun", "Shotgun", "Acertos causam dano em área.", true));
         poolDeCartas.add(new Carta("double_bullet", "Bala Dupla", "Cada clique conta como 2 tiros.", true));
         poolDeCartas.add(new Carta("screen_bomb", "Bomba de Tela", "Limpa todos os patos (Ativa).", true));
         poolDeCartas.add(new Carta("time_freeze", "Tempo Suspenso", "Pausa o movimento dos patos (Ativa).", true));
         poolDeCartas.add(new Carta("headwind", "Vento Contrário", "Reduz a velocidade dos patos (Ativa).", true));
+
+        // Ricochete: Apenas se nível < 2
+        if (estado == null || estado.getNivelRicochete() < 2) {
+            poolDeCartas.add(new Carta("ricochet", "Ricochete", "Bala ricocheteia para o pato mais próximo.", true));
+        }
         
         // Cartas não implementadas
         poolDeCartas.add(new Carta("eagle_eye", "Visão de Águia", "Fantasmas duram mais (TODO).", false));
@@ -85,6 +91,7 @@ public class CartaActivity extends AppCompatActivity {
             case "screen_bomb": iconResId = R.drawable.icon_bomb; break;
             case "time_freeze": iconResId = R.drawable.icon_time_freeze; break;
             case "headwind": iconResId = R.drawable.icon_headwind; break;
+            case "ricochet": iconResId = R.drawable.icon_double_bullet; break; // Placeholder
             default: iconResId = 0; break;
         }
         

@@ -7,6 +7,7 @@ public class EstadoJogador implements Serializable {
     private int danoBase = 1;
     private boolean temShotgun = false;
     private float raioShotgunDp = 100f;
+    private int nivelRicochete = 0; // Nível 0 a 2
 
     // Ativas - Desbloqueio
     private boolean bombaDesbloqueada = false;
@@ -21,6 +22,13 @@ public class EstadoJogador implements Serializable {
     public int getDanoBase() { return danoBase; }
     public boolean isTemShotgun() { return temShotgun; }
     public float getRaioShotgunDp() { return raioShotgunDp; }
+    public int getNivelRicochete() { return nivelRicochete; }
+
+    public float getFatorRicochete() {
+        if (nivelRicochete == 1) return 0.5f;
+        if (nivelRicochete == 2) return 0.75f;
+        return 0f;
+    }
 
     public boolean isBombaDesbloqueada() { return bombaDesbloqueada; }
     public boolean isPausaDesbloqueada() { return pausaDesbloqueada; }
@@ -50,6 +58,9 @@ public class EstadoJogador implements Serializable {
             case "headwind":
                 if (!ventoDesbloqueado) ventoDesbloqueado = true;
                 else if (percentualVentoBase < 55) percentualVentoBase += 10;
+                break;
+            case "ricochet":
+                if (nivelRicochete < 2) nivelRicochete++;
                 break;
         }
     }

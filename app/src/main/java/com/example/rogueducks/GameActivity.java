@@ -337,13 +337,17 @@ public class GameActivity extends AppCompatActivity {
         }
 
         int dano = estadoJogador.getDanoBase();
-        aplicarDanoAoPato(pato, dano);
+        aplicarDanoAoPato(pato, dano, true, false);
+
+        // GATILHO RICOCHETE: Apenas na morte pelo clique original
+        if (pato.getVidaAtual() <= 0 && estadoJogador.getNivelRicochete() > 0) {
+            dispararRicochete(pato, dano);
+        }
 
         if (estadoJogador.isTemShotgun()) {
             float raioPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 
                     estadoJogador.getRaioShotgunDp(), getResources().getDisplayMetrics());
             
-            // Efeito visual da explosão
             mostrarEfeitoShotgun(clickX, clickY, raioPx);
 
             List<Pato> copiaPatos = new ArrayList<>(patosAtivos);
@@ -355,10 +359,47 @@ public class GameActivity extends AppCompatActivity {
                 
                 double dist = Math.sqrt(Math.pow(clickX - pX, 2) + Math.pow(clickY - pY, 2));
                 if (dist <= raioPx) {
-                    aplicarDanoAoPato(p, Math.max(1, dano / 2));
+                    aplicarDanoAoPato(p, Math.max(1, dano / 2), false, false);
                 }
             }
         }
+    }
+
+    private void dispararRicochete(Pato origem, int danoOriginal) {
+        float raioPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 100, getResources().getDisplayMetrics());
+        Pato alvo = buscarPatoMaisProximo(origem, raioPx);
+        
+        if (alvo != null) {
+            float fator = estadoJogador.getFatorRicochete();
+            int danoRicochete = Math.max(1, Math.round(danoOriginal * fator));
+            // isRicochetHit = true impede novos ricochetes a partir deste
+            aplicarDanoAoPato(alvo, danoRicochete, false, true);
+        }
+    }
+
+    private Pato buscarPatoMaisProximo(Pato origem, float raioPx) {
+        if (origem.getView() == null) return null;
+        
+        float origX = origem.getView().getTranslationX() + origem.getView().getWidth() / 2f;
+        float origY = origem.getView().getTranslationY() + origem.getView().getHeight() / 2f;
+        
+        Pato maisProximo = null;
+        double menorDist = Double.MAX_VALUE;
+
+        for (Pato p : patosAtivos) {
+            if (p == origem || !p.isAtivo() || p.getView() == null) continue;
+
+            float pX = p.getView().getTranslationX() + p.getView().getWidth() / 2f;
+            float pY = p.getView().getTranslationY() + p.getView().getHeight() / 2f;
+            
+            double dist = Math.sqrt(Math.pow(origX - pX, 2) + Math.pow(origY - pY, 2));
+            
+            if (dist <= raioPx && dist < menorDist) {
+                menorDist = dist;
+                maisProximo = p;
+            }
+        }
+        return maisProximo;
     }
 
     private void mostrarEfeitoShotgun(float x, float y, float raioPx) {
@@ -398,7 +439,7 @@ public class GameActivity extends AppCompatActivity {
         alpha.start();
     }
 
-    private void aplicarDanoAoPato(Pato pato, int dano) {
+    private void aplicarDanoAoPato(Pato pato, int dano, boolean isDiretoDoClique, boolean isRicochetHit) {
         if (!pato.isAtivo()) return;
         
         pato.sofrerDano(dano);
@@ -488,7 +529,7 @@ public class GameActivity extends AppCompatActivity {
         if (now - lastBombaTime < cd) return;
         lastBombaTime = now;
         
-        for (Pato p : new ArrayList<>(patosAtivos)) aplicarDanoAoPato(p, 999);
+        for (Pato p : new ArrayList<>(patosAtivos)) aplicarDanoAoPato(p, 999, false, false);
     }
 
     private void acionarPausa() {
@@ -662,6 +703,7 @@ public class GameActivity extends AppCompatActivity {
         
         if (ducksKilled >= meta) {
             Intent intent = new Intent(this, CartaActivity.class);
+            intent.putExtra("ESTADO_JOGADOR", estadoJogador);
             cartaLauncher.launch(intent);
         } else {
             showGameOverDialog();

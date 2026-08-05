@@ -1,65 +1,65 @@
-# Plano de Implementação - Integração de Sprites Pixel Art
+# Plano de Implementação - Carta Ricochete (V3 Final)
 
-Este plano detalha a substituição dos recursos visuais vetoriais pelos novos sprites em pixel art (PNG), garantindo nitidez e consistência estética.
+Este plano detalha a implementação da 6ª carta, **Ricochete**, com a condição de disparo exata e estruturalmente segura para evitar cascatas.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> Para manter a nitidez dos pixels ao ampliar as imagens, utilizaremos `setFilterBitmap(false)`.
-> Esta mudança é puramente estética e não altera as regras de colisão, vida ou velocidade.
+> **Condição Rígida de Disparo**: O Ricochete disparará apenas se:
+> `pato.getVidaAtual() <= 0 && nivelRicochete > 0 && isDiretoDoClique == true && isRicochetHit == false`.
+> Isso garante que o efeito ocorra apenas na morte pelo clique original e nunca em reações secundárias.
 
 ## Proposed Changes
 
-### 1. Atualização dos Patos
+### 1. Documentação de Design
 
-#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- No método `createDuckView(Pato pato)`:
-    - Mapear os tipos para os novos PNGs:
-        - `NORMAL` -> `duck_normal.png`
-        - `RAPIDO` -> `duck_fast.png`
-        - `RESISTENTE` -> `duck_resistant.png`
-        - `FANTASMA` -> `duck_ghost.png`
-        - `DOURADO` -> `duck_golden.png`
-    - Após `duckImg.setImageResource(resId)`, aplicar:
-        ```java
-        if (duckImg.getDrawable() instanceof BitmapDrawable) {
-            ((BitmapDrawable) duckImg.getDrawable()).setFilterBitmap(false);
-        }
-        ```
+#### [MODIFY] [GAME_DESIGN.md](file:///home/iartes/AndroidStudioProjects/RogueDucks/docs/GAME_DESIGN.md)
+- Adicionar **Ricochete (Passiva)**:
+    - **Gatilho**: Morte de um pato via clique direto.
+    - **Busca**: Localiza o pato **mais próximo** (nearest) dentro de um raio de 100dp.
+    - **Dano**:
+        - Nível 1: 50% do dano original (mín 1).
+        - Nível 2: 75% do dano original.
+    - **Limite**: Máximo Nível 2. Estruturalmente impossível de encadear (No Chaining).
 
-### 2. Atualização das Habilidades (HUD)
+---
 
-#### [MODIFY] [activity_game.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/activity_game.xml)
-- Substituir as referências de `android:background` nos botões de habilidade:
-    - `btnBomba` -> `@drawable/icon_bomb`
-    - `btnPausa` -> `@drawable/icon_time_freeze`
-    - `btnVento` -> `@drawable/icon_headwind`
+### 2. Modelos e Estado
 
-#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- No `onCreate`, após capturar as referências dos botões de habilidade, garantir nitidez nos ícones (se forem Bitmaps).
-
-### 3. Atualização das Cartas de Escolha
+#### [MODIFY] [EstadoJogador.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/EstadoJogador.java)
+- Adicionar `int nivelRicochete = 0`.
+- Método `getFatorRicochete()`: Retorna 0.5f (Nível 1) ou 0.75f (Nível 2).
+- Atualizar `ativarUpgrade(id)` para suportar o stacking de "ricochete" até o limite de 2.
 
 #### [MODIFY] [CartaActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/CartaActivity.java)
-- No método `configurarSlot`, adicionar um ícone ao layout do card (requer ajuste no `item_carta.xml`).
-- Mapear IDs de carta para ícones:
-    - `shotgun` -> `icon_shotgun.png`
-    - `double_bullet` -> `icon_double_bullet.png`
-    - `screen_bomb` -> `icon_bomb.png`
-    - `time_freeze` -> `icon_time_freeze.png`
-    - `headwind` -> `icon_headwind.png`
+- Adicionar a carta Ricochete ao pool inicial.
+- **Lógica de Pool Dinâmico**: Antes de sortear, verificar o `nivelRicochete` no `EstadoJogador` enviado via Intent. Se for >= 2, remover a carta do pool temporário de sorteio.
 
-#### [MODIFY] [item_carta.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/item_carta.xml)
-- Adicionar um `ImageView` acima do `txtCardName` para exibir o ícone da habilidade.
+---
 
-### 4. Background do Jogo
+### 3. Lógica de Jogo (GameActivity)
 
-#### [MODIFY] [activity_game.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/layout/activity_game.xml)
-- Definir `android:background="@drawable/bg_sky"` no `gameContainer`.
-- Como o `RelativeLayout` não possui `scaleType`, se houver distorção excessiva, utilizaremos um `ImageView` como primeira camada do layout com `android:scaleType="centerCrop"` para garantir o preenchimento total da tela em 16:9 ou similar.
+#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
+- **Refatorar `aplicarDanoAoPato`**:
+    - Nova assinatura: `aplicarDanoAoPato(Pato pato, int dano, boolean isDiretoDoClique, boolean isRicochetHit)`.
+- **Implementar `buscarPatoMaisProximo(Pato origem, float raioPx)`**:
+    - Busca linear em `patosAtivos` calculando distâncias e retornando o menor valor dentro do raio.
+- **Implementar `dispararRicochete(Pato origem, int danoOriginal)`**:
+    - Encapsula a lógica de busca e aplicação do dano secundário (com `isRicochetHit = true`).
+- **Atualizar todos os Call Sites**:
+    - Clique direto: `(..., true, false)`.
+    - Shotgun: `(..., false, false)`.
+    - Ricochete: `(..., false, true)`.
+    - Bomba: `(..., false, false)`.
+
+---
+
+## Verification Plan
 
 ### Manual Verification (Dispositivo Físico)
-1. **Ducks**: Confirmar que os patos agora são sprites pixelados coloridos em vez de formas geométricas.
-2. **HUD**: Confirmar que os ícones das habilidades ativas mudaram para os novos PNGs.
-3. **Cartas**: Abrir a tela de upgrades e validar se cada card exibe o ícone correspondente ao efeito.
-4. **Nitidez**: Observar de perto se os pixels estão "quadrados" (nítidos) ou se há borrão (blur).
+1. **Pato Único**: Confirmar flash normal.
+2. **Nearest Target**: Validar que o ricochete busca o vizinho mais próximo, não um aleatório.
+3. **No Chain**: Matar um pato com o Ricochete e confirmar que ele não gera um terceiro disparo.
+4. **Shotgun Interaction**: Validar que o Ricochete ocorre apenas uma vez por clique, mesmo que o Shotgun mate 3 patos.
+5. **Stacking**: Validar que no Nível 2 o dano causado no alvo secundário é visivelmente maior.
+6. **Pool Removal**: Confirmar que a carta desaparece após a 2ª escolha.

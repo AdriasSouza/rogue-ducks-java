@@ -31,3 +31,4 @@
     - [x] Polimento visual (Cores, Estilos, Animações de Hit/Morte).
     - [x] Feedback visual avançado (Explosão Shotgun e Cooldown Interativo).
     - [x] Integração de sprites Pixel Art e Background.
+    - [x] Nova carta: Ricochete (implementação estruturalmente segura).
