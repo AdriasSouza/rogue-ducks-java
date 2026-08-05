@@ -1,23 +1,28 @@
-# Walkthrough - Polimento Visual e UX
+# Walkthrough - Balanceamento e Refinamento de Gameplay
 
-Nesta etapa, elevamos o padrão visual do "Duck Roguelike" através de uma identidade visual consistente e feedbacks de interação dinâmicos.
+Nesta etapa, focamos em melhorar o ritmo do jogo, tornar os upgrades mais estratégicos e corrigir problemas de feedback visual no HUD.
 
 ## Alterações Realizadas
 
-### 1. Identidade Visual
-- **Paleta Dark**: Implementamos um tema escuro consistente (`#1A1A1D`) em todas as telas via `themes.xml` e `colors.xml`.
-- **Estilos Centralizados**: Criamos o `styles.xml` para padronizar Títulos, HUD e Botões, removendo redundâncias nos layouts.
-- **Botões e Cards**: Adicionamos bordas arredondadas e efeitos de **Ripple** para feedback tátil/visual ao clicar.
+### 1. Sistema de Spawn e Densidade
+- **Limite de Concorrência**: O jogo agora permite mais patos simultâneos conforme a onda avança:
+    - Ondas 1-2: Máximo 2.
+    - Ondas 3-5: Máximo 4.
+    - Ondas 6+: Máximo 6.
+- **Lógica de Retentativa**: Se o limite for atingido, o sistema aguarda 400ms antes de tentar spawnar o próximo pato, garantindo um fluxo denso mas estável.
+- **Buff Indireto da Shotgun**: Com mais patos em voo, a probabilidade de acertos múltiplos com a Shotgun aumentou significativamente.
 
-### 2. Feedback de Gameplay
-- **Hit Flash**: Ao ser atingido, o pato executa uma animação rápida de pulso (escala 1.2x) que não bloqueia a lógica de dano.
-- **Animação de Morte**: Patos abatidos encolhem e desaparecem suavemente (`shrink and fade`) em uma animação paralela à lógica de pontuação.
+### 2. Escalonamento de Dificuldade
+- **Tanques Progressivos**: Patos **Resistentes** agora ganham +1 HP a cada 4 ondas (Teto de 6 HP).
+- **Consistência Visual**: Tanto a `vidaAtual` quanto a `vidaMaxima` são atualizadas no spawn, garantindo que o feedback de alpha proporcional funcione corretamente em patos com HP extra.
 
-### 3. Melhorias na UI
-- **CartaActivity**: Os cards agora possuem cores de fundo distintas por categoria:
-    - **Ofensivas**: Tom avermelhado escuro.
-    - **Utilitárias**: Tom azulado escuro.
-- **HUD**: Fontes maiores e cores mais legíveis para o acompanhamento da Meta e Pontos.
+### 3. Refinamento de Habilidades
+- **Tempo Suspenso Local**: A habilidade agora pausa apenas os patos presentes na tela no momento da ativação. Novos patos continuam surgindo e se movendo, evitando que o tempo da onda acabe "vazio".
+- **Timer da Onda**: O timer agora corre de forma independente, sendo interrompido apenas pelo Pause Global.
+
+### 4. Correções de HUD e UX
+- **Restauração de Cooldown**: Validamos e corrigimos os IDs das Views de cooldown. O overlay e o texto numérico ("Xs") estão visíveis novamente sobre os botões.
+- **Interatividade**: Os botões de habilidade ficam explicitamente não-clicáveis durante o cooldown, prevenindo disparos acidentais.
 
 ---
 
@@ -25,81 +30,47 @@ Nesta etapa, elevamos o padrão visual do "Duck Roguelike" através de uma ident
 
 ### [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
 
-#### Lógica de Dano e Feedback (Não-bloqueante)
+#### Spawn com Limite e HP Escalonado
 ```java
-private void aplicarDanoAoPato(Pato pato, int dano) {
-    if (!pato.isAtivo()) return;
-    pato.sofrerDano(dano);
+private void spawnNextDuck() {
+    // ...
+    int maxSimultaneos = (wave <= 2) ? 2 : (wave <= 5) ? 4 : 6;
 
-    // Feedback Visual de Hit (Dispare e Esqueça)
-    ImageView view = pato.getView();
-    if (view != null) {
-        ObjectAnimator pulseX = ObjectAnimator.ofFloat(view, "scaleX", 1.0f, 1.2f, 1.0f);
-        ObjectAnimator pulseY = ObjectAnimator.ofFloat(view, "scaleY", 1.0f, 1.2f, 1.0f);
-        pulseX.setDuration(100);
-        pulseY.setDuration(100);
-        pulseX.start();
-        pulseY.start();
+    if (patosAtivos.size() >= maxSimultaneos) {
+        gameHandler.postDelayed(this::spawnNextDuck, 400); // Tenta de novo em breve
+        return;
     }
-
-    if (pato.getVidaAtual() <= 0) {
-        // Lógica de jogo IMEDIATA (Sem atraso por animação)
-        score += pato.getTipo().pontos;
-        ducksKilled++;
-        updateHUD();
-
-        // Animação de Morte roda em paralelo
-        executarAnimacaoMorte(pato);
-    } else {
-        float alpha = (float) pato.getVidaAtual() / pato.getVidaMaxima();
-        if (view != null) view.setAlpha(Math.max(0.2f, alpha));
+    // ...
+    if (tipo == Pato.Tipo.RESISTENTE) {
+        int hpEscalonado = Math.min(6, 3 + (wave / 4));
+        pato.setVidaMaxima(hpEscalonado); // Garante alpha proporcional correto
+        pato.setVidaAtual(hpEscalonado);
     }
+    // ...
 }
 ```
 
-#### Animação de Morte (Paralela à remoção de lógica)
+#### Tempo Suspenso Local
 ```java
-private void executarAnimacaoMorte(Pato pato) {
-    pato.setAtivo(false); // Bloqueia interações futuras imediatamente
-    ImageView view = pato.getView();
-    if (view == null) {
-        removeDuck(pato); // Fallback de limpeza
-        return;
+private void acionarPausa() {
+    // ...
+    List<Pato> patosParaPausar = new ArrayList<>(patosAtivos); // Captura instantâneo
+    for (Pato p : patosParaPausar) {
+        if (p.getAnimator() != null) p.getAnimator().pause();
+        p.setBlinkPaused(true);
     }
 
-    // Remove do controle de movimento e da lista ativa NA HORA
-    if (pato.getAnimator() != null) {
-        pato.getAnimator().removeAllListeners();
-        pato.getAnimator().cancel();
-    }
-    patosAtivos.remove(pato);
-
-    // Efeito visual de saída (Shrink & Fade)
-    ObjectAnimator sX = ObjectAnimator.ofFloat(view, "scaleX", view.getScaleX(), 0f);
-    ObjectAnimator sY = ObjectAnimator.ofFloat(view, "scaleY", view.getScaleY(), 0f);
-    ObjectAnimator alpha = ObjectAnimator.ofFloat(view, "alpha", view.getAlpha(), 0f);
-
-    sX.setDuration(200);
-    sY.setDuration(200);
-    alpha.setDuration(200);
-
-    alpha.addListener(new AnimatorListenerAdapter() {
-        @Override
-        public void onAnimationEnd(Animator animation) {
-            // Remoção física da View apenas após o deleite visual
-            if (view.getParent() != null) {
-                ((RelativeLayout) view.getParent()).removeView(view);
+    gameHandler.postDelayed(() -> {
+        for (Pato p : patosParaPausar) {
+            if (p.isAtivo() && !isPaused) { // Só retoma se o jogo não estiver no Pause Global
+                if (p.getAnimator() != null) p.getAnimator().resume();
+                p.setBlinkPaused(false);
             }
-            pato.setView(null);
         }
-    });
-
-    sX.start();
-    sY.start();
-    alpha.start();
+    }, estadoJogador.getDuracaoPausaBase() * 1000L);
 }
 ```
 
 ---
-> [!TIP]
-> A animação de morte utiliza `patosAtivos.remove(pato)` antes de iniciar, garantindo que o Shotgun ou Bomba não tentem interagir com o pato enquanto ele "morre" visualmente.
+> [!IMPORTANT]
+> O escalonamento de HP exige que o jogador busque upgrades de **Bala Dupla** para manter a eficiência em ondas avançadas.

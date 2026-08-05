@@ -4,7 +4,7 @@
     android:id="@+id/gameContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark">
+    android:background="@drawable/bg_sky">
 
     <!-- HUD Area -->
     <LinearLayout
@@ -83,7 +83,7 @@
             android:layout_height="60dp"
             android:layout_margin="4dp"
             android:visibility="gone"
-            android:background="@drawable/ic_card_bomb">
+            android:background="@drawable/icon_bomb">
             <View
                 android:id="@+id/overlayBomba"
                 android:layout_width="match_parent"
@@ -106,7 +106,7 @@
             android:layout_height="60dp"
             android:layout_margin="4dp"
             android:visibility="gone"
-            android:background="@drawable/ic_card_freeze">
+            android:background="@drawable/icon_time_freeze">
             <View
                 android:id="@+id/overlayPausa"
                 android:layout_width="match_parent"
@@ -129,7 +129,7 @@
             android:layout_height="60dp"
             android:layout_margin="4dp"
             android:visibility="gone"
-            android:background="@drawable/ic_card_wind">
+            android:background="@drawable/icon_headwind">
             <View
                 android:id="@+id/overlayVento"
                 android:layout_width="match_parent"

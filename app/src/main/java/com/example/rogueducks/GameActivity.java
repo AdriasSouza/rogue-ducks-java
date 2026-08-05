@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -105,6 +106,11 @@ public class GameActivity extends AppCompatActivity {
         btnPausa.setOnClickListener(v -> acionarPausa());
         btnVento.setOnClickListener(v -> acionarVento());
         btnPause.setOnClickListener(v -> showPauseMenu());
+
+        // Garantir nitidez dos ícones de habilidade
+        aplicarNitidezHabilidade(btnBomba);
+        aplicarNitidezHabilidade(btnPausa);
+        aplicarNitidezHabilidade(btnVento);
 
         getScreenDimensions();
         setupWave(wave);
@@ -266,17 +272,28 @@ public class GameActivity extends AppCompatActivity {
         return Pato.Tipo.NORMAL;
     }
 
+    private void aplicarNitidezHabilidade(View v) {
+        if (v.getBackground() instanceof BitmapDrawable) {
+            ((BitmapDrawable) v.getBackground()).setFilterBitmap(false);
+        }
+    }
+
     private void createDuckView(Pato pato) {
         ImageView duckImg = new ImageView(this);
         int resId;
         switch (pato.getTipo()) {
-            case RAPIDO: resId = R.drawable.ic_duck_fast; break;
-            case RESISTENTE: resId = R.drawable.ic_duck_resistant; break;
-            case FANTASMA: resId = R.drawable.ic_duck_ghost; break;
-            case DOURADO: resId = R.drawable.ic_duck_golden; break;
-            default: resId = R.drawable.ic_duck_normal; break;
+            case RAPIDO: resId = R.drawable.duck_fast; break;
+            case RESISTENTE: resId = R.drawable.duck_resistant; break;
+            case FANTASMA: resId = R.drawable.duck_ghost; break;
+            case DOURADO: resId = R.drawable.duck_golden; break;
+            default: resId = R.drawable.duck_normal; break;
         }
         duckImg.setImageResource(resId);
+        
+        // Garantir nitidez dos pixels
+        if (duckImg.getDrawable() instanceof BitmapDrawable) {
+            ((BitmapDrawable) duckImg.getDrawable()).setFilterBitmap(false);
+        }
         
         int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 60, getResources().getDisplayMetrics());
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(size, size);

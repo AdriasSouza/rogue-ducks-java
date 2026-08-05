@@ -2,8 +2,10 @@ package com.example.rogueducks;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -70,9 +72,28 @@ public class CartaActivity extends AppCompatActivity {
         view.setVisibility(View.VISIBLE);
         TextView txtName = view.findViewById(R.id.txtCardName);
         TextView txtDesc = view.findViewById(R.id.txtCardDesc);
+        ImageView imgIcon = view.findViewById(R.id.imgCardIcon);
 
         txtName.setText(carta.getNome());
         txtDesc.setText(carta.getDescricao());
+
+        // Mapear Ícone
+        int iconResId;
+        switch (carta.getId()) {
+            case "shotgun": iconResId = R.drawable.icon_shotgun; break;
+            case "double_bullet": iconResId = R.drawable.icon_double_bullet; break;
+            case "screen_bomb": iconResId = R.drawable.icon_bomb; break;
+            case "time_freeze": iconResId = R.drawable.icon_time_freeze; break;
+            case "headwind": iconResId = R.drawable.icon_headwind; break;
+            default: iconResId = 0; break;
+        }
+        
+        if (iconResId != 0) {
+            imgIcon.setImageResource(iconResId);
+            if (imgIcon.getDrawable() instanceof BitmapDrawable) {
+                ((BitmapDrawable) imgIcon.getDrawable()).setFilterBitmap(false);
+            }
+        }
 
         // Visual por categoria
         int colorId;
