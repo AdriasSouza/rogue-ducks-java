@@ -386,7 +386,8 @@ public class GameActivity extends AppCompatActivity {
         Pato maisProximo = null;
         double menorDist = Double.MAX_VALUE;
 
-        for (Pato p : patosAtivos) {
+        // Iterar sobre cópia por segurança
+        for (Pato p : new ArrayList<>(patosAtivos)) {
             if (p == origem || !p.isAtivo() || p.getView() == null) continue;
 
             float pX = p.getView().getTranslationX() + p.getView().getWidth() / 2f;
