@@ -1,14 +1,13 @@
-- [ ] **Paleta de Cores e Estilos**
-    - [ ] Atualizar `colors.xml` com a nova paleta Dark/Roguelike.
-    - [ ] Criar `styles.xml` com estilos reutilizáveis para botões e HUD.
-    - [ ] Criar drawables para botões (ripple) e cards (rounded).
-- [ ] **Feedback de Interação (Game)**
-    - [ ] Implementar animação de flash (hit) no `GameActivity`.
-    - [ ] Implementar animação de morte (shrink) paralela à lógica de jogo.
-- [ ] **Polimento de Telas**
-    - [ ] Aplicar estilos e cores na `MainActivity`.
-    - [ ] Aplicar estilos e cores na `RankingActivity`.
-    - [ ] Refinar `CartaActivity` com cards coloridos por categoria.
-- [ ] **Verificação e Git**
-    - [ ] Validar build e fluxos de animação.
-    - [ ] Fazer commit: "polish visual - cores, estilos e feedback de interação".
+- [x] **Preparação de Modelos**
+    - [x] Adicionar setters de vida em `Pato.java`.
+- [x] **Refinamento de Gameplay e Balanceamento**
+    - [x] Implementar limite de concorrência no `spawnNextDuck`.
+    - [x] Implementar escalonamento de HP para patos Resistentes.
+    - [x] Refatorar `acionarPausa` (Tempo Suspenso) para ser local e não-bloqueante de spawn.
+    - [x] Remover dependência de `isTimeFrozen` no `timerRunnable`.
+- [x] **Correções de HUD e Feedback**
+    - [x] Validar e corrigir referências de cooldown UI.
+    - [x] Sincronizar interatividade do botão com o cooldown.
+- [x] **Verificação e Git**
+    - [x] Validar build e fluxos.
+    - [x] Fazer commit: "balanceamento - densidade de patos, escalonamento de hp e refina tempo suspenso".

@@ -63,3 +63,13 @@ Sobreviver ao maior número de ondas possível, abatendo patos para atingir meta
 ### Fórmulas Gerais
 - **Meta**: 75% do total (priorizar valores da tabela para ondas 1-5).
 - **Velocidade Máxima**: 2.0x.
+
+### Balanceamento de Densidade e HP
+- **Patos Simultâneos (Limite de Concorrência)**:
+    - Ondas 1-2: Máximo de 2 patos simultâneos.
+    - Ondas 3-5: Máximo de 4 patos simultâneos.
+    - Ondas 6+: Máximo de 6 patos simultâneos.
+- **Escalonamento de HP (Pato Resistente)**:
+    - Vida Base: 3 HP.
+    - Incremento: +1 HP a cada 4 ondas (Ex: Onda 5 = 4 HP, Onda 9 = 5 HP).
+    - Teto Máximo: 6 HP.

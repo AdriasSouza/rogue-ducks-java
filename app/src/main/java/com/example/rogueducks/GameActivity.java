@@ -60,7 +60,6 @@ public class GameActivity extends AppCompatActivity {
 
     // Cooldown states (ms)
     private long lastBombaTime = 0, lastPausaTime = 0, lastVentoTime = 0;
-    private boolean isTimeFrozen = false;
     private boolean isHeadwindActive = false;
 
     private final ActivityResultLauncher<Intent> cartaLauncher = registerForActivityResult(
@@ -173,16 +172,14 @@ public class GameActivity extends AppCompatActivity {
     private final Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
-            if (!isWaveActive || isPaused) return; // Fix: Stop rescheduling if paused
+            if (!isWaveActive || isPaused) return;
 
             if (timeLeft > 0) {
-                if (!isTimeFrozen) {
-                    timeLeft--;
-                    updateHUD();
-                }
+                timeLeft--;
+                updateHUD();
                 gameHandler.postDelayed(this, 1000);
             } else if (!isWaveEnded) {
-                endWave(); // Fix: Removed !isPaused check
+                endWave();
             }
         }
     };
@@ -193,10 +190,21 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void spawnNextDuck() {
-        // Fix: Added gameHandler.removeCallbacks to ensure we don't have multiple spawn loops
         gameHandler.removeCallbacks(this::spawnNextDuck);
 
         if (!isWaveActive || isPaused || ducksSpawned >= totalDucksInWave) return;
+
+        // Limite de Concorrência por Onda
+        int maxSimultaneos;
+        if (wave <= 2) maxSimultaneos = 2;
+        else if (wave <= 5) maxSimultaneos = 4;
+        else maxSimultaneos = 6;
+
+        if (patosAtivos.size() >= maxSimultaneos) {
+            // Teto atingido, tenta de novo em breve
+            gameHandler.postDelayed(this::spawnNextDuck, 400);
+            return;
+        }
 
         Pato.Tipo tipo = sortearTipoPato(wave);
         float multVel = Math.min(2.0f, 1.0f + (Math.max(0, wave - 1) * 0.05f));
@@ -204,10 +212,17 @@ public class GameActivity extends AppCompatActivity {
         
         Pato pato = new Pato("duck_" + System.currentTimeMillis() + "_" + ducksSpawned, tipo, multVel);
         
+        // Escalonamento de HP para Resistentes
+        if (tipo == Pato.Tipo.RESISTENTE) {
+            int hpEscalonado = Math.min(6, 3 + (wave / 4));
+            pato.setVidaMaxima(hpEscalonado);
+            pato.setVidaAtual(hpEscalonado);
+        }
+
         createDuckView(pato);
         animateDuck(pato);
         
-        if (isTimeFrozen || isPaused) {
+        if (isPaused) {
             if (pato.getAnimator() != null) pato.getAnimator().pause();
             pato.setBlinkPaused(true);
         }
@@ -466,15 +481,17 @@ public class GameActivity extends AppCompatActivity {
         if (now - lastPausaTime < cd) return;
         lastPausaTime = now;
         
-        isTimeFrozen = true;
-        for (Pato p : patosAtivos) {
+        // Pausa local: apenas patos JÁ na tela
+        List<Pato> patosParaPausar = new ArrayList<>(patosAtivos);
+        for (Pato p : patosParaPausar) {
             if (p.getAnimator() != null) p.getAnimator().pause();
             p.setBlinkPaused(true);
         }
+
         gameHandler.postDelayed(() -> {
-            if (!isPaused) {
-                isTimeFrozen = false;
-                for (Pato p : patosAtivos) {
+            for (Pato p : patosParaPausar) {
+                // Só retoma se o pato ainda estiver ativo e o jogo não estiver pausado globalmente
+                if (p.isAtivo() && !isPaused) {
                     if (p.getAnimator() != null) p.getAnimator().resume();
                     p.setBlinkPaused(false);
                 }
@@ -521,7 +538,7 @@ public class GameActivity extends AppCompatActivity {
         });
         pato.setAnimator(animator);
         animator.start();
-        if (isPaused || isTimeFrozen) animator.pause();
+        if (isPaused) animator.pause();
     }
 
     private void startCooldownUIUpdate() {
@@ -570,8 +587,8 @@ public class GameActivity extends AppCompatActivity {
                 case 0: // Continuar
                     isPaused = false;
                     for (Pato p : patosAtivos) {
-                        if (p.getAnimator() != null && !isTimeFrozen) p.getAnimator().resume();
-                        if (!isTimeFrozen) p.setBlinkPaused(false);
+                        if (p.getAnimator() != null) p.getAnimator().resume();
+                        p.setBlinkPaused(false);
                     }
                     startTimer(); // Fix: Restart timer tick
                     spawnNextDuck(); // Fix: Restart spawn loop

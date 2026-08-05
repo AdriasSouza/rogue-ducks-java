@@ -27,7 +27,7 @@ public class Pato {
 
     private final String id;
     private final Tipo tipo;
-    private final int vidaMaxima;
+    private int vidaMaxima;
     private int vidaAtual;
     private float velocidade;
     private ImageView view;
@@ -75,7 +75,9 @@ public class Pato {
     public String getId() { return id; }
     public Tipo getTipo() { return tipo; }
     public int getVidaMaxima() { return vidaMaxima; }
+    public void setVidaMaxima(int vidaMaxima) { this.vidaMaxima = vidaMaxima; }
     public int getVidaAtual() { return vidaAtual; }
+    public void setVidaAtual(int vidaAtual) { this.vidaAtual = vidaAtual; }
     public void sofrerDano(int dano) { this.vidaAtual -= dano; }
     public float getVelocidade() { return velocidade; }
     public void setVelocidade(float velocidade) { this.velocidade = velocidade; }

@@ -1,49 +1,54 @@
-# Plano de Implementação - Feedback Visual Avançado (Shotgun e Cooldowns)
+# Plano de Implementação - Densidade de Patos e Refinamento de Mecânicas
 
-Este plano descreve a adição de efeitos visuais para a explosão da Shotgun e o refinamento do indicador visual de cooldown para as habilidades ativas.
+Este plano detalha o aumento da densidade de patos simultâneos (buff indireto da Shotgun), o escalonamento de vida dos patos resistentes e o refinamento da habilidade de Tempo Suspenso.
 
 ## User Review Required
 
-> [!NOTE]
-> O efeito da **Shotgun** será uma View circular dinâmica que expande e desaparece.
-> O indicador de **Cooldown** utilizará a técnica de máscara vertical (ajuste de altura de overlay) já presente, mas com polimento na lógica de interatividade.
+> [!IMPORTANT]
+> **Densidade Dinâmica**: O limite de patos simultâneos em tela aumentará conforme as ondas, permitindo combos de Shotgun mais frequentes. Implementaremos um limite explícito de concorrência no spawn.
+> **Tempo Suspenso**: A habilidade deixará de ser global para ser local (afeta apenas patos presentes), garantindo que o spawn de novos patos não seja prejudicado.
 
 ## Proposed Changes
 
-### 1. Efeito Visual da Shotgun
-
-#### [NEW] [effect_shotgun.xml](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/res/drawable/effect_shotgun.xml)
-- Criar um `shape` circular (oval) com cor `@color/primary_gold` e alpha inicial alto (ex: 0.4).
+### 1. Refinamento de Spawn e Densidade (Itens 2 e 4)
 
 #### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- Criar método `mostrarEfeitoShotgun(float x, float y, float raioPx)`:
-    - Instanciar uma `View` dinamicamente.
-    - Definir tamanho fixo (ex: 1dp x 1dp) e centralizar no ponto (x, y).
-    - Usar `ObjectAnimator` para:
-        - `scaleX` e `scaleY` de 0 até `(raioPx * 2)`.
-        - `alpha` de 1.0f para 0f.
-    - Duração: 250ms.
-    - Remover do `gameContainer` no `onAnimationEnd`.
-- Chamar este método no `handleDuckClick` quando o upgrade estiver ativo.
+- **`spawnNextDuck`**:
+    - Adicionar cálculo de `maxSimultaneos` (Ondas 1-2: 2, 3-5: 4, 6+: 6).
+    - Verificar `patosAtivos.size() < maxSimultaneos` antes de criar um novo pato.
+    - Se o limite for atingido, reagendar a tentativa de spawn para 400ms depois.
+- **`acionarPausa` (Tempo Suspenso)**:
+    - Remover a flag global `isTimeFrozen`.
+    - Capturar os patos ativos no momento do clique em uma lista local.
+    - Pausar apenas esses patos e agendar o `resume` apenas para eles.
+- **`timerRunnable`**:
+    - Remover dependência de `isTimeFrozen` (o timer da onda agora corre sempre, exceto no pause global).
 
 ---
 
-### 2. Refinamento de Cooldown Visual
+### 2. Escalonamento de Dificuldade (Item 5)
+
+#### [MODIFY] [Pato.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/Pato.java)
+- Adicionar métodos `setVidaAtual(int hp)` e `setVidaMaxima(int hp)`.
 
 #### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
-- **`updateCooldownOverlay`**:
-    - Garantir que o overlay cubra o ícone de baixo para cima (ou cima para baixo) proporcionalmente.
-    - **Interatividade**: Desabilitar o clique no botão (`setClickable(false)`) enquanto o cooldown estiver ativo e reabilitar ao terminar. Isso evita que o efeito de ripple do Material dispare visualmente quando a habilidade não pode ser usada.
-- **`startCooldownUIUpdate`**: Sincronizar perfeitamente com os novos campos de `EstadoJogador`.
+- **`spawnNextDuck`**:
+    - Se o tipo for `RESISTENTE`, calcular HP bônus: `vida = Math.min(6, 3 + (wave / 4))`.
+
+---
+
+### 3. Correções de HUD (Item 1)
+
+#### [MODIFY] [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
+- Validar IDs de overlay e TextView de cooldown.
+- Garantir que o `cooldownHandler` atualize os textos numéricos corretamente.
 
 ---
 
 ## Verification Plan
 
 ### Manual Verification (Dispositivo Físico)
-1. **Shotgun**: Atirar em qualquer lugar (com o upgrade ativo) e confirmar se um anel/círculo dourado expande rapidamente a partir do clique.
-2. **Cooldown**: Ativar a Bomba e observar se:
-    - O overlay preto semitransparente desce suavemente.
-    - O texto "20s", "19s"... atualiza corretamente.
-    - O botão não reage a toques (sem ripple) até o tempo zerar.
-3. **Estresse**: Usar Shotgun em grupos de patos para garantir que múltiplas explosões visuais simultâneas não causem jank ou bugs de sobreposição.
+1. **Densidade**: Na Onda 6, confirmar visualmente se o jogo mantém até 6 patos na tela sem engasgos.
+2. **Tempo Suspenso**: Ativar e confirmar que novos patos nascem e se movem enquanto os antigos estão congelados.
+3. **Resistência**: Validar na Onda 5 que patos resistentes agora precisam de 4 cliques.
+4. **Shotgun**: Confirmar que o dano em área está mais frequente devido à maior densidade.
