@@ -311,6 +311,9 @@ public class GameActivity extends AppCompatActivity {
             float raioPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 
                     estadoJogador.getRaioShotgunDp(), getResources().getDisplayMetrics());
             
+            // Efeito visual da explosão
+            mostrarEfeitoShotgun(clickX, clickY, raioPx);
+
             List<Pato> copiaPatos = new ArrayList<>(patosAtivos);
             for (Pato p : copiaPatos) {
                 if (p == pato || !p.isAtivo() || p.getView() == null) continue;
@@ -324,6 +327,43 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void mostrarEfeitoShotgun(float x, float y, float raioPx) {
+        View effect = new View(this);
+        effect.setBackgroundResource(R.drawable.effect_shotgun);
+        
+        int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(size, size);
+        effect.setLayoutParams(params);
+        
+        effect.setTranslationX(x - size / 2f);
+        effect.setTranslationY(y - size / 2f);
+        
+        gameContainer.addView(effect);
+
+        float finalScale = (raioPx * 2) / size;
+
+        ObjectAnimator sX = ObjectAnimator.ofFloat(effect, "scaleX", 0f, finalScale);
+        ObjectAnimator sY = ObjectAnimator.ofFloat(effect, "scaleY", 0f, finalScale);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(effect, "alpha", 0.6f, 0f);
+
+        sX.setDuration(250);
+        sY.setDuration(250);
+        alpha.setDuration(250);
+
+        alpha.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (effect.getParent() != null) {
+                    ((RelativeLayout) effect.getParent()).removeView(effect);
+                }
+            }
+        });
+
+        sX.start();
+        sY.start();
+        alpha.start();
     }
 
     private void aplicarDanoAoPato(Pato pato, int dano) {
@@ -498,14 +538,18 @@ public class GameActivity extends AppCompatActivity {
 
     private void updateCooldownOverlay(View overlay, TextView txt, long lastTime, long cd) {
         long elapsed = System.currentTimeMillis() - lastTime;
+        View parent = (View) overlay.getParent();
+        
         if (elapsed >= cd) {
             overlay.getLayoutParams().height = 0;
             txt.setText("");
+            if (parent != null) parent.setClickable(true);
         } else {
             float perc = 1.0f - (float) elapsed / cd;
             overlay.getLayoutParams().height = (int) (perc * TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 60, getResources().getDisplayMetrics()));
             int remainingSec = (int) Math.ceil((cd - elapsed) / 1000f);
             txt.setText(remainingSec + "s");
+            if (parent != null) parent.setClickable(false);
         }
         overlay.requestLayout();
     }

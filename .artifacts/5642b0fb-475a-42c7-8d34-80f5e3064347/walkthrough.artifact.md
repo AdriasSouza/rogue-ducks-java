@@ -1,77 +1,105 @@
-# Walkthrough - Etapa 5: Persistência, SQLite e Ranking
+# Walkthrough - Polimento Visual e UX
 
-Nesta etapa, implementamos o sistema de persistência local para salvar recordes, refinamos o sistema de upgrades com stacking e padronizamos a experiência do usuário.
+Nesta etapa, elevamos o padrão visual do "Duck Roguelike" através de uma identidade visual consistente e feedbacks de interação dinâmicos.
 
 ## Alterações Realizadas
 
-### Persistência e Ranking
-- **DatabaseHelper**: Implementado o gerenciamento do banco SQLite seguindo o padrão acadêmico, com métodos para inserção e busca dos Top 10 recordes.
-- **Fluxo de Game Over**: Ao perder, o jogador agora visualiza um `AlertDialog` para inserir seu nome. Se vazio, o nome padrão é "Jogador".
-- **RankingActivity**: Implementada usando `ListView` e `ArrayAdapter` (conforme sugerido), listando Nome, Pontos e Onda Alcançada.
+### 1. Identidade Visual
+- **Paleta Dark**: Implementamos um tema escuro consistente (`#1A1A1D`) em todas as telas via `themes.xml` e `colors.xml`.
+- **Estilos Centralizados**: Criamos o `styles.xml` para padronizar Títulos, HUD e Botões, removendo redundâncias nos layouts.
+- **Botões e Cards**: Adicionamos bordas arredondadas e efeitos de **Ripple** para feedback tátil/visual ao clicar.
 
-### Refinamentos de Gameplay
-- **Stacking de Upgrades**:
-    - **Bala Dupla**: Agora aumenta o dano base em +1 a cada escolha (Até o teto de 5).
-    - **Shotgun**: Agora aumenta o raio da explosão em +30dp a cada escolha (Até o teto de 250dp).
-- **UI de Cartas**: A `CartaActivity` agora esconde slots vazios (`View.GONE`), eliminando placeholders de "Esgotado".
-- **Orientação Fixa**: Todas as telas do app foram travadas em `landscape` para garantir que o layout não quebre durante a partida.
+### 2. Feedback de Gameplay
+- **Hit Flash**: Ao ser atingido, o pato executa uma animação rápida de pulso (escala 1.2x) que não bloqueia a lógica de dano.
+- **Animação de Morte**: Patos abatidos encolhem e desaparecem suavemente (`shrink and fade`) em uma animação paralela à lógica de pontuação.
 
-### Correções Técnicas
-- **Dano Colateral**: Confirmado que patos eliminados pela explosão da Shotgun passam pelo método `aplicarDanoAoPato`, incrementando pontuação e meta da onda corretamente.
-- **Gestão de Recursos**: Fechamento de cursores e conexões SQLite em blocos `finally` para evitar vazamentos.
-
-## Verificação Manual
-
-1. **Orientação**: Confirmado. `MainActivity`, `GameActivity`, `CartaActivity` e `RankingActivity` iniciam e permanecem em landscape.
-2. **Stacking**: Confirmado. Escolher "Bala Dupla" múltiplas vezes aumenta o dano, permitindo matar patos resistentes com menos cliques (ou instantaneamente).
-3. **Persistência**: Confirmado. Após o Game Over, inserir o nome e salvar direciona o usuário para o Ranking, onde o score aparece ordenado.
+### 3. Melhorias na UI
+- **CartaActivity**: Os cards agora possuem cores de fundo distintas por categoria:
+    - **Ofensivas**: Tom avermelhado escuro.
+    - **Utilitárias**: Tom azulado escuro.
+- **HUD**: Fontes maiores e cores mais legíveis para o acompanhamento da Meta e Pontos.
 
 ---
 
-## Trechos de Código Principais
+## Revisão de Código Solicitada
 
-### [DatabaseHelper.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/DatabaseHelper.java)
+### [GameActivity.java](file:///home/iartes/AndroidStudioProjects/RogueDucks/app/src/main/java/com/example/rogueducks/GameActivity.java)
+
+#### Lógica de Dano e Feedback (Não-bloqueante)
 ```java
-public void inserirPontuacao(String nome, int pontuacao, int onda) {
-    SQLiteDatabase db = this.getWritableDatabase();
-    try {
-        ContentValues values = new ContentValues();
-        values.put(COL_NOME, (nome == null || nome.trim().isEmpty()) ? "Jogador" : nome);
-        values.put(COL_PONTUACAO, pontuacao);
-        values.put(COL_ONDA, onda);
-        db.insert(TABLE_RANKING, null, values);
-    } finally {
-        db.close();
+private void aplicarDanoAoPato(Pato pato, int dano) {
+    if (!pato.isAtivo()) return;
+    pato.sofrerDano(dano);
+
+    // Feedback Visual de Hit (Dispare e Esqueça)
+    ImageView view = pato.getView();
+    if (view != null) {
+        ObjectAnimator pulseX = ObjectAnimator.ofFloat(view, "scaleX", 1.0f, 1.2f, 1.0f);
+        ObjectAnimator pulseY = ObjectAnimator.ofFloat(view, "scaleY", 1.0f, 1.2f, 1.0f);
+        pulseX.setDuration(100);
+        pulseY.setDuration(100);
+        pulseX.start();
+        pulseY.start();
+    }
+
+    if (pato.getVidaAtual() <= 0) {
+        // Lógica de jogo IMEDIATA (Sem atraso por animação)
+        score += pato.getTipo().pontos;
+        ducksKilled++;
+        updateHUD();
+
+        // Animação de Morte roda em paralelo
+        executarAnimacaoMorte(pato);
+    } else {
+        float alpha = (float) pato.getVidaAtual() / pato.getVidaMaxima();
+        if (view != null) view.setAlpha(Math.max(0.2f, alpha));
     }
 }
 ```
 
-### Lógica de Salvamento (GameActivity)
+#### Animação de Morte (Paralela à remoção de lógica)
 ```java
-private void showGameOverDialog() {
-    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setTitle("Fim de Jogo!");
-    builder.setMessage("Você chegou até a onda " + wave + " com " + score + " pontos.\nDigite seu nome:");
+private void executarAnimacaoMorte(Pato pato) {
+    pato.setAtivo(false); // Bloqueia interações futuras imediatamente
+    ImageView view = pato.getView();
+    if (view == null) {
+        removeDuck(pato); // Fallback de limpeza
+        return;
+    }
 
-    final EditText input = new EditText(this);
-    builder.setView(input);
+    // Remove do controle de movimento e da lista ativa NA HORA
+    if (pato.getAnimator() != null) {
+        pato.getAnimator().removeAllListeners();
+        pato.getAnimator().cancel();
+    }
+    patosAtivos.remove(pato);
 
-    builder.setPositiveButton("Salvar", (dialog, which) -> {
-        String nome = input.getText().toString().trim();
-        dbHelper.inserirPontuacao(nome, score, wave);
+    // Efeito visual de saída (Shrink & Fade)
+    ObjectAnimator sX = ObjectAnimator.ofFloat(view, "scaleX", view.getScaleX(), 0f);
+    ObjectAnimator sY = ObjectAnimator.ofFloat(view, "scaleY", view.getScaleY(), 0f);
+    ObjectAnimator alpha = ObjectAnimator.ofFloat(view, "alpha", view.getAlpha(), 0f);
 
-        startActivity(new Intent(this, RankingActivity.class));
-        finish();
+    sX.setDuration(200);
+    sY.setDuration(200);
+    alpha.setDuration(200);
+
+    alpha.addListener(new AnimatorListenerAdapter() {
+        @Override
+        public void onAnimationEnd(Animator animation) {
+            // Remoção física da View apenas após o deleite visual
+            if (view.getParent() != null) {
+                ((RelativeLayout) view.getParent()).removeView(view);
+            }
+            pato.setView(null);
+        }
     });
-    // ...
+
+    sX.start();
+    sY.start();
+    alpha.start();
 }
 ```
 
-### Schema do Banco (Documentado em ARCHITECTURE.md)
-| Coluna | Tipo |
-| :--- | :--- |
-| id | INTEGER PK AUTOINCREMENT |
-| nome | TEXT |
-| pontuacao | INTEGER |
-| onda | INTEGER |
-| data | DATETIME (Default Now) |
+---
+> [!TIP]
+> A animação de morte utiliza `patosAtivos.remove(pato)` antes de iniciar, garantindo que o Shotgun ou Bomba não tentem interagir com o pato enquanto ele "morre" visualmente.
