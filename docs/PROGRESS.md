@@ -34,3 +34,4 @@
     - [x] Nova carta: Ricochete (implementação estruturalmente segura).
     - [x] Polish final: Galeria, Lore, Créditos e Impacto visual.
     - [x] Backgrounds aleatórios por partida.
+    - [x] Sistema de Áudio: BGM (MediaPlayer) e SFX (ToneGenerator).
